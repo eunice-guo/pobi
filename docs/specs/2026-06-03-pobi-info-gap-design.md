@@ -1,4 +1,6 @@
-# 破壁 (Pòbì) — 中美投资信息差 · 信源整合工具
+# 破壁 / GlobalInfo — 中美投资信息差 · 信源整合工具
+
+> Name: **破壁** (Chinese) · **GlobalInfo** (English).
 
 > Spec · 2026-06-03 · status: **approved, pre-plan**
 > Sibling product to `simple-research` (投研平权). This is product #1 of two;
