@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+/* 破壁 / GlobalInfo — warm newsprint, deep teal "I read the filings" accent.
+   Consistent with simple-research, lighter weight. */
+:root {
+  --paper: #f8f4ed;
+  --surface: #ffffff;
+  --ink: #1c1a17;
+  --ink-soft: #5b554c;
+  --line: #e4ddcf;
+  --teal: #0f5b56;
+  --teal-soft: #e6efed;
+  --flag: #b4351f;
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, "PingFang SC", "Songti SC", -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+}
+
+.font-display {
+  font-family: Georgia, "Songti SC", "Times New Roman", serif;
+  letter-spacing: -0.01em;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #16140f;
+    --surface: #1f1c16;
+    --ink: #f1ece1;
+    --ink-soft: #b3ab9c;
+    --line: #322d23;
+    --teal: #5fb8af;
+    --teal-soft: #173430;
+  }
+}

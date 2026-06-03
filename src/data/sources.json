@@ -1,0 +1,19 @@
+{
+  "_comment": "破壁 / GlobalInfo curated sources — the editorial moat. Buyside-filtered (X > Substack > podcasts; Discord excluded by design). Edit freely; the builder reads this. channel: x | substack | transcript. priority: P0 highest.",
+  "sources": [
+    { "handle": "dylan522p", "displayName": "Dylan Patel · SemiAnalysis", "channel": "x", "priority": "P0", "sectors": ["AI-SEMIS"], "enabled": true },
+    { "handle": "Citrini7", "displayName": "Citrini Research", "channel": "x", "priority": "P0", "sectors": ["THEMATIC"], "enabled": true },
+    { "handle": "mule_capital", "displayName": "Doug O'Laughlin · Fabricated Knowledge", "channel": "x", "priority": "P0", "sectors": ["AI-SEMIS"], "enabled": true },
+    { "handle": "TSOH_Investing", "displayName": "Alex Morris · TSOH", "channel": "x", "priority": "P1", "sectors": ["QUALITY"], "enabled": true },
+    { "handle": "buccocapital", "displayName": "Bucco Capital", "channel": "x", "priority": "P1", "sectors": ["SOFTWARE"], "enabled": true },
+    { "handle": "AndrewRangeley", "displayName": "Andrew Walker · Yet Another Value", "channel": "x", "priority": "P1", "sectors": ["SPECIAL-SITS"], "enabled": true },
+    { "handle": "benthompson", "displayName": "Ben Thompson · Stratechery", "channel": "x", "priority": "P1", "sectors": ["TECH-STRATEGY"], "enabled": true },
+
+    { "handle": "https://www.chinatalk.media/feed", "displayName": "ChinaTalk · Jordan Schneider", "channel": "substack", "priority": "P0", "sectors": ["CHINA-TECH"], "enabled": true },
+    { "handle": "https://interconnected.blog/rss/", "displayName": "Interconnected · Kevin Xu", "channel": "substack", "priority": "P0", "sectors": ["CHINA-TECH"], "enabled": true },
+    { "handle": "https://www.fabricatedknowledge.com/feed", "displayName": "Fabricated Knowledge", "channel": "substack", "priority": "P1", "sectors": ["AI-SEMIS"], "enabled": true },
+    { "handle": "https://www.cassandraunchained.com/feed", "displayName": "Cassandra Unchained · Michael Burry (disabled: site TLS cert expired, no working feed)", "channel": "substack", "priority": "P1", "sectors": ["MACRO", "SHORT"], "enabled": false },
+    { "handle": "https://semianalysis.com/feed/", "displayName": "SemiAnalysis (paywalled · teasers)", "channel": "substack", "priority": "P2", "sectors": ["AI-SEMIS"], "enabled": true },
+    { "handle": "https://www.doomberg.com/feed", "displayName": "Doomberg (paywalled · teasers)", "channel": "substack", "priority": "P2", "sectors": ["ENERGY", "MACRO"], "enabled": false }
+  ]
+}

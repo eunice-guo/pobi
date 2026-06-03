@@ -1,0 +1,34 @@
+name: generate-feed
+# The "builder half" of the Zara pattern: fetch curated sources, enrich with
+# Claude, commit the static feed JSON the app reads. Daily + manual.
+on:
+  schedule:
+    - cron: "0 6 * * *" # 06:00 UTC daily
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build-feed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build feed
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
+          ENRICH_MODEL: ${{ vars.ENRICH_MODEL }}
+        run: npm run build:feed
+      - name: Commit feed
+        run: |
+          git config user.name "feed-bot"
+          git config user.email "feed-bot@users.noreply.github.com"
+          git add public/feed
+          git diff --cached --quiet || git commit -m "feed: $(date -u +%F)"
+          git push
