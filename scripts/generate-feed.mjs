@@ -70,12 +70,12 @@ async function main() {
   const enrich = makeEnricher();
   let enriched = false;
   if (!enrich) {
-    notes.push("enrichment skipped: no ANTHROPIC_API_KEY (items shown in English, 翻译待生成)");
+    notes.push("enrichment skipped: no OPENROUTER_API_KEY (items shown in English, 翻译待生成)");
     console.log("  enrichment: SKIPPED (no key)");
   } else {
     enriched = true;
     const slice = items.slice(0, MAX_ENRICH);
-    console.log(`  enrichment: ${slice.length} item(s) via ${process.env.ENRICH_MODEL || "haiku"}`);
+    console.log(`  enrichment: ${slice.length} item(s) via OpenRouter free chain${process.env.ENRICH_MODEL ? ` (primary ${process.env.ENRICH_MODEL})` : ""}`);
     for (let i = 0; i < slice.length; i++) {
       try {
         items[i] = await enrich(slice[i]);

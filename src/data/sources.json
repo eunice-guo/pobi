@@ -8,6 +8,8 @@
     { "handle": "buccocapital", "displayName": "Bucco Capital", "channel": "x", "priority": "P1", "sectors": ["SOFTWARE"], "enabled": true },
     { "handle": "AndrewRangeley", "displayName": "Andrew Walker · Yet Another Value", "channel": "x", "priority": "P1", "sectors": ["SPECIAL-SITS"], "enabled": true },
     { "handle": "benthompson", "displayName": "Ben Thompson · Stratechery", "channel": "x", "priority": "P1", "sectors": ["TECH-STRATEGY"], "enabled": true },
+    { "handle": "aleabitoreddit", "displayName": "Serenity · AI 供应链 / 卡脖子理论", "channel": "x", "priority": "P0", "sectors": ["AI-SEMIS"], "enabled": true },
+    { "handle": "crux_capital_", "displayName": "Crux Capital · Gaetano（光子 / AI）", "channel": "x", "priority": "P1", "sectors": ["AI-SEMIS"], "enabled": true },
 
     { "handle": "https://www.chinatalk.media/feed", "displayName": "ChinaTalk · Jordan Schneider", "channel": "substack", "priority": "P0", "sectors": ["CHINA-TECH"], "enabled": true },
     { "handle": "https://interconnected.blog/rss/", "displayName": "Interconnected · Kevin Xu", "channel": "substack", "priority": "P0", "sectors": ["CHINA-TECH"], "enabled": true },

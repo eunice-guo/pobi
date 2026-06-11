@@ -21,9 +21,11 @@ jobs:
       - run: npm ci
       - name: Build feed
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
           ENRICH_MODEL: ${{ vars.ENRICH_MODEL }}
+          LOOKBACK_HOURS: "72"
+          MAX_ENRICH: "30"
         run: npm run build:feed
       - name: Commit feed
         run: |
