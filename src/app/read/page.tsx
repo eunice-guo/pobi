@@ -37,6 +37,11 @@ function Reader() {
     );
 
   const body = item.translationZh ? cleanTranslation(item.translationZh) : null;
+  const ColLabel = ({ children }: { children: React.ReactNode }) => (
+    <p className="mb-3 border-b pb-2 font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: "var(--ink-faint)", borderColor: "var(--line)" }}>
+      {children}
+    </p>
+  );
 
   return (
     <Shell>
@@ -51,7 +56,7 @@ function Reader() {
         ))}
       </div>
 
-      {item.title && <h1 className="font-display mt-4 text-[34px] font-semibold leading-[1.18] tracking-tight">{item.title}</h1>}
+      {item.title && <h1 className="font-display mt-4 text-[34px] font-semibold leading-[1.15] tracking-tight">{item.title}</h1>}
 
       {item.summaryZh && (
         <div className="mt-6 rounded-lg border-l-2 py-1 pl-4" style={{ borderColor: "var(--teal)" }}>
@@ -60,21 +65,27 @@ function Reader() {
         </div>
       )}
 
-      {body ? (
-        <div className="reading mt-8 whitespace-pre-wrap text-[17.5px] leading-[1.95]" style={{ color: "var(--ink)" }}>
-          {body}
+      {/* widescreen bilingual: 译文 (primary) | 原文 (reference) */}
+      <div className="mt-9 grid gap-10 lg:grid-cols-2 lg:gap-12">
+        <div>
+          <ColLabel>译文 · 中文</ColLabel>
+          {body ? (
+            <div className="reading whitespace-pre-wrap text-[17px] leading-[1.95]" style={{ color: "var(--ink)" }}>{body}</div>
+          ) : (
+            <p className="text-[15px]" style={{ color: "var(--ink-faint)" }}>（此条暂无中文译文，请看右侧原文。）</p>
+          )}
         </div>
-      ) : (
-        <p className="mt-8 text-[15px]" style={{ color: "var(--ink-faint)" }}>（此条暂无中文译文，请看原文。）</p>
-      )}
+        <div>
+          <ColLabel>原文 · English</ColLabel>
+          <div className="whitespace-pre-wrap text-[15.5px] leading-[1.85]" style={{ color: "var(--ink-soft)" }}>{item.textEn}</div>
+        </div>
+      </div>
 
       <div className="mt-10 flex items-center gap-5 border-t pt-5 text-sm" style={{ borderColor: "var(--line)" }}>
         <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-medium underline-offset-2 hover:underline" style={{ color: "var(--teal)" }}>
-          阅读英文原文 ↗
+          阅读英文原文全文 ↗
         </a>
-        <span className="font-mono text-[11px]" style={{ color: "var(--ink-faint)" }}>
-          忠实翻译 · 节选 · 不给买卖建议
-        </span>
+        <span className="font-mono text-[11px]" style={{ color: "var(--ink-faint)" }}>忠实翻译 · 节选 · 不给买卖建议</span>
       </div>
     </Shell>
   );
@@ -82,7 +93,7 @@ function Reader() {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="mx-auto max-w-[680px] px-5 py-10 sm:px-6">
+    <main className="mx-auto max-w-5xl px-5 py-10 sm:px-8">
       <Link href="/" className="font-display text-lg font-semibold tracking-tight transition-colors hover:text-[var(--teal)]">
         ← 破壁 <span className="font-mono text-xs uppercase tracking-[0.2em]" style={{ color: "var(--ink-faint)" }}>GlobalInfo</span>
       </Link>

@@ -4,9 +4,32 @@ import type { FeedItem } from "@/lib/types";
 import { dayLabel } from "@/lib/date";
 
 const CHANNEL_LABEL: Record<string, string> = { x: "X", substack: "Substack", transcript: "业绩记录" };
+const SECTOR_LABEL: Record<string, string> = {
+  "CHINA-TECH": "中国科技",
+  "AI-SEMIS": "AI · 半导体",
+  THEMATIC: "主题",
+  SOFTWARE: "软件",
+  QUALITY: "优质公司",
+  "SPECIAL-SITS": "特殊事件",
+  "TECH-STRATEGY": "科技战略",
+  MACRO: "宏观",
+  ENERGY: "能源",
+  SHORT: "做空",
+};
 
-export default function ItemCard({ item, isNew, index = 0 }: { item: FeedItem; isNew: boolean; index?: number }) {
+export default function ItemCard({
+  item,
+  isNew,
+  index = 0,
+  watchlist = [],
+}: {
+  item: FeedItem;
+  isNew: boolean;
+  index?: number;
+  watchlist?: string[];
+}) {
   const href = `/read?id=${encodeURIComponent(item.id)}`;
+  const hasTickers = item.tickers.length > 0;
 
   return (
     <article
@@ -31,13 +54,6 @@ export default function ItemCard({ item, isNew, index = 0 }: { item: FeedItem; i
             ● new
           </span>
         )}
-        <span className="ml-auto flex flex-wrap gap-1">
-          {item.tickers.map((t) => (
-            <span key={t} className="ticker rounded border px-1 text-[11px]" style={{ borderColor: "var(--line)" }}>
-              ${t}
-            </span>
-          ))}
-        </span>
       </div>
 
       {item.title && (
@@ -48,7 +64,47 @@ export default function ItemCard({ item, isNew, index = 0 }: { item: FeedItem; i
         </Link>
       )}
 
-      <p className="mt-2 text-[15px] leading-relaxed" style={{ color: "var(--ink-soft)" }}>
+      {/* which ticker(s) / theme this info relates to */}
+      <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+        <span className="font-mono text-[10px] uppercase tracking-[0.15em]" style={{ color: "var(--ink-faint)" }}>
+          相关
+        </span>
+        {hasTickers ? (
+          item.tickers.map((t) => {
+            const watched = watchlist.includes(t);
+            return (
+              <span
+                key={t}
+                className="ticker rounded px-1.5 py-0.5 text-[11px] font-medium"
+                style={
+                  watched
+                    ? { background: "var(--teal)", color: "var(--paper)" }
+                    : { border: "1px solid var(--line)", color: "var(--ink-soft)" }
+                }
+                title={watched ? "在你的 watchlist 中" : undefined}
+              >
+                ${t}
+              </span>
+            );
+          })
+        ) : item.sectors.length ? (
+          item.sectors.map((s) => (
+            <span
+              key={s}
+              className="rounded px-1.5 py-0.5 text-[11px]"
+              style={{ background: "var(--paper-2)", color: "var(--ink-soft)", border: "1px solid var(--line)" }}
+            >
+              {SECTOR_LABEL[s] ?? s}
+            </span>
+          ))
+        ) : (
+          <span className="text-[11px]" style={{ color: "var(--ink-faint)" }}>
+            宏观 · 暂无个股标的
+          </span>
+        )}
+      </div>
+
+      <p className="mt-2.5 text-[15px] leading-relaxed" style={{ color: "var(--ink-soft)" }}>
         {item.summaryZh ?? (
           <span style={{ color: "var(--ink-faint)" }}>（翻译待生成）{item.textEn.slice(0, 160)}…</span>
         )}
@@ -56,11 +112,7 @@ export default function ItemCard({ item, isNew, index = 0 }: { item: FeedItem; i
 
       <div className="mt-3.5 flex items-center gap-4 text-xs">
         {item.translationZh && (
-          <Link
-            href={href}
-            className="font-medium underline-offset-2 hover:underline"
-            style={{ color: "var(--teal)" }}
-          >
+          <Link href={href} className="font-medium underline-offset-2 hover:underline" style={{ color: "var(--teal)" }}>
             阅读全文译文 →
           </Link>
         )}

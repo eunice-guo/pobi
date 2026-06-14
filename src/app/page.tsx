@@ -19,7 +19,7 @@ export default function Home() {
             </p>
           </div>
           <span className="hidden shrink-0 font-mono text-[11px] uppercase tracking-[0.18em] sm:block" style={{ color: "var(--ink-faint)" }}>
-            二手信息 · 不给买卖建议
+            不给买卖建议
           </span>
         </div>
       </header>

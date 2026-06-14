@@ -142,7 +142,7 @@ export default function DigestFeed() {
               )}
             </div>
           ) : (
-            visible.map((i, idx) => <ItemCard key={i.id} item={i} isNew={isNew(i)} index={idx} />)
+            visible.map((i, idx) => <ItemCard key={i.id} item={i} isNew={isNew(i)} index={idx} watchlist={watchlist} />)
           )}
         </div>
       </section>
