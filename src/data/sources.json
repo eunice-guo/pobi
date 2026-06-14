@@ -16,6 +16,12 @@
     { "handle": "https://www.fabricatedknowledge.com/feed", "displayName": "Fabricated Knowledge", "channel": "substack", "priority": "P1", "sectors": ["AI-SEMIS"], "enabled": true },
     { "handle": "https://www.cassandraunchained.com/feed", "displayName": "Cassandra Unchained · Michael Burry (disabled: site TLS cert expired, no working feed)", "channel": "substack", "priority": "P1", "sectors": ["MACRO", "SHORT"], "enabled": false },
     { "handle": "https://semianalysis.com/feed/", "displayName": "SemiAnalysis (paywalled · teasers)", "channel": "substack", "priority": "P2", "sectors": ["AI-SEMIS"], "enabled": true },
-    { "handle": "https://www.doomberg.com/feed", "displayName": "Doomberg (paywalled · teasers)", "channel": "substack", "priority": "P2", "sectors": ["ENERGY", "MACRO"], "enabled": false }
+    { "handle": "https://www.doomberg.com/feed", "displayName": "Doomberg (paywalled · teasers)", "channel": "substack", "priority": "P2", "sectors": ["ENERGY", "MACRO"], "enabled": false },
+
+    { "handle": "https://www.appeconomyinsights.com/feed", "displayName": "App Economy Insights · Eric", "channel": "substack", "priority": "P0", "sectors": ["TECH-STRATEGY", "SOFTWARE"], "enabled": true },
+    { "handle": "https://www.mbi-deepdives.com/feed", "displayName": "Mostly Borrowed Ideas · MBI", "channel": "substack", "priority": "P1", "sectors": ["QUALITY"], "enabled": true },
+    { "handle": "https://bestanchorstocks.substack.com/feed", "displayName": "Best Anchor Stocks", "channel": "substack", "priority": "P1", "sectors": ["QUALITY"], "enabled": true },
+    { "handle": "https://www.generalist.com/feed", "displayName": "The Generalist · Mario Gabriele", "channel": "substack", "priority": "P1", "sectors": ["TECH-STRATEGY"], "enabled": true },
+    { "handle": "https://aswathdamodaran.blogspot.com/feeds/posts/default?alt=rss", "displayName": "Musings on Markets · Damodaran", "channel": "substack", "priority": "P2", "sectors": ["MACRO", "QUALITY"], "enabled": true }
   ]
 }
