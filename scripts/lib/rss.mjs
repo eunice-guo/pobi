@@ -4,7 +4,7 @@ import Parser from "rss-parser";
 const parser = new Parser({ timeout: 15000 });
 
 // Strip HTML tags to plain text, collapse whitespace, cap length.
-function toText(html, cap = 4000) {
+function toText(html, cap = 10000) {
   if (!html) return "";
   const txt = html
     .replace(/<style[\s\S]*?<\/style>/gi, " ")

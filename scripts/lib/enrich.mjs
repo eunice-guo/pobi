@@ -15,7 +15,7 @@ const FREE_MODELS = [
   "nvidia/nemotron-3-super-120b-a12b:free",
 ];
 const MAX_RETRIES_PER_MODEL = 2;
-const MAX_TOKENS = 2200;
+const MAX_TOKENS = 4096; // full-length faithful translation, not a half
 
 const SYSTEM = `你是中美投资信息差的翻译与摘要助手。给你一段英文投资观点（来自 X 或 Substack），你要：
 1) summaryZh：1-3 句中文摘要，点明"在说什么 + 为什么对投资者重要"。客观，不加买卖建议。
