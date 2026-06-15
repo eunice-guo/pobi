@@ -9,6 +9,12 @@ import Calendar from "./Calendar";
 const WATCH_KEY = "pobi.watchlist";
 const SEEN_KEY = "pobi.lastSeenAt";
 
+// 龙头 default watchlist — Magnificent 7 + AMD + SpaceX (private, tracked as a
+// pseudo-ticker). Seeded on first visit so the rail isn't empty; the user can
+// remove any of these. A one-time migration flag avoids re-adding removed ones.
+const DEFAULT_WATCHLIST = ["NVDA", "AAPL", "MSFT", "GOOGL", "AMZN", "META", "TSLA", "AMD", "SPACEX"];
+const SEEDED_KEY = "pobi.watchlist.seeded";
+
 export default function DigestFeed() {
   const [feed, setFeed] = useState<Feed | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +29,19 @@ export default function DigestFeed() {
       .then(setFeed)
       .catch((e) => setError(String(e)));
     try {
-      setWatchlist(JSON.parse(localStorage.getItem(WATCH_KEY) || "[]"));
+      const stored = localStorage.getItem(WATCH_KEY);
+      const existing: string[] = stored ? JSON.parse(stored) : [];
+      // One-time migration: merge the 龙头 defaults in (defaults first, dedup,
+      // keep any extras the user added). Runs once per browser, then respects
+      // every later add/remove. Fixes empty/sparse rails for existing visitors.
+      if (!localStorage.getItem(SEEDED_KEY)) {
+        const merged = [...new Set([...DEFAULT_WATCHLIST, ...existing])];
+        setWatchlist(merged);
+        localStorage.setItem(WATCH_KEY, JSON.stringify(merged));
+        localStorage.setItem(SEEDED_KEY, "1");
+      } else {
+        setWatchlist(existing);
+      }
       setLastSeen(Number(localStorage.getItem(SEEN_KEY) || 0));
     } catch {}
   }, []);
