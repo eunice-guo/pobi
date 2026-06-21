@@ -26,7 +26,7 @@
 
     { "handle": "https://www.apolloacademy.com/feed/", "displayName": "Apollo Academy · Torsten Sløk（每日宏观图表）", "channel": "research", "priority": "P0", "sectors": ["MACRO", "ALLOCATION"], "enabled": true },
     { "handle": "https://www.oaktreecapital.com/insights/memos/rss", "displayName": "Oaktree · Howard Marks Memos", "channel": "research", "priority": "P0", "sectors": ["MACRO", "ALLOCATION"], "enabled": true },
-    { "handle": "https://www.bridgewater.com/research-and-insights", "displayName": "Bridgewater · Research & Insights (disabled: 无公开 RSS, 待补合规拉取路径)", "channel": "research", "priority": "P0", "sectors": ["MACRO", "ALLOCATION"], "enabled": false },
-    { "handle": "https://www.carlyle.com/global-insights", "displayName": "Carlyle · Global Insights · Jason Thomas (disabled: 无公开 RSS, 待补合规拉取路径)", "channel": "research", "priority": "P1", "sectors": ["MACRO", "ALLOCATION"], "enabled": false }
+    { "handle": "https://www.youtube.com/feeds/videos.xml?playlist_id=PLCR47EwuAnNa89u6QbOLcuINFzBxHS39Z", "displayName": "Bridgewater · Research & Insights（YouTube 公开播放列表）", "channel": "research", "priority": "P0", "sectors": ["MACRO", "ALLOCATION"], "enabled": true },
+    { "handle": "https://insights-and-indicators.castos.com/feed", "displayName": "Carlyle · Insights & Indicators · Jason Thomas（公开播客 RSS）", "channel": "research", "priority": "P1", "sectors": ["MACRO", "ALLOCATION"], "enabled": true }
   ]
 }

@@ -25,11 +25,17 @@
   `scripts/lib/rss.mjs` 改为按 `source.channel` 通用化；`generate-feed.mjs` 把 substack +
   research 一起走 RSS 路径；`ItemCard` / `read` 页加「资管研究」「财报电话会」角标。
 - **信源**：`sources.json` 新增 Apollo Academy（Torsten Sløk）、Oaktree（Howard Marks Memos）
-  为 `research` 且 enabled；**Bridgewater / Carlyle 已登记但 enabled:false**（无公开 RSS，待补合规拉取路径）。
-- 验证：`tsc --noEmit` 与 `next build` 均通过。
+  为 `research` 且 enabled。
+- **Bridgewater / Carlyle 已接通并 enabled**（合规公开 feed，非爬墙）：
+  - Bridgewater「Research & Insights」官方 **YouTube 播放列表 Atom feed**
+    （`youtube.com/feeds/videos.xml?playlist_id=…`）；`rss.mjs` 加了 `media:group/media:description`
+    解析与「research 频道空正文时回退用标题」逻辑。
+  - Carlyle「Insights & Indicators」（Jason Thomas）官方 **播客 RSS**（Castos 托管，
+    `insights-and-indicators.castos.com/feed`）；`rss.mjs` 加了 `itunes:summary` 解析。
+- 验证：`tsc --noEmit`、`next build`、以及对 YouTube Atom / 播客 RSS 样本的离线解析单测均通过。
+  （沙箱出网被代理 403，真实 feed 抓取在 CI 开放网络里执行；URL 若有偏差，builder 记 note 并跳过，自愈。）
 
-**仍待办**：① earnings call transcript 的 builder 接线（下方 C，仍是占位）；
-② Bridgewater / Carlyle 等无 RSS 资管源的合规拉取路径（官方 API / 公开页，禁爬墙）。
+**仍待办**：earnings call transcript 的 builder 接线（下方 C，仍是占位）。
 
 ---
 
