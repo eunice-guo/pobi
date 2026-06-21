@@ -3,7 +3,12 @@ import Link from "next/link";
 import type { FeedItem } from "@/lib/types";
 import { dayLabel } from "@/lib/date";
 
-const CHANNEL_LABEL: Record<string, string> = { x: "X", substack: "Substack", transcript: "业绩记录" };
+const CHANNEL_LABEL: Record<string, string> = {
+  x: "X",
+  substack: "Substack",
+  transcript: "财报电话会",
+  research: "资管研究",
+};
 const SECTOR_LABEL: Record<string, string> = {
   "CHINA-TECH": "中国科技",
   "AI-SEMIS": "AI · 半导体",
@@ -15,6 +20,7 @@ const SECTOR_LABEL: Record<string, string> = {
   MACRO: "宏观",
   ENERGY: "能源",
   SHORT: "做空",
+  ALLOCATION: "资产配置",
 };
 
 export default function ItemCard({
@@ -22,13 +28,16 @@ export default function ItemCard({
   isNew,
   index = 0,
   watchlist = [],
+  onRead,
 }: {
   item: FeedItem;
   isNew: boolean;
   index?: number;
   watchlist?: string[];
+  onRead?: (id: string) => void;
 }) {
   const href = `/read?id=${encodeURIComponent(item.id)}`;
+  const markRead = () => onRead?.(item.id);
   const hasTickers = item.tickers.length > 0;
 
   return (
@@ -57,7 +66,7 @@ export default function ItemCard({
       </div>
 
       {item.title && (
-        <Link href={href}>
+        <Link href={href} onClick={markRead}>
           <h3 className="font-display mt-2.5 text-[21px] font-semibold leading-snug transition-colors group-hover:text-[var(--teal)]">
             {item.title}
           </h3>
@@ -112,7 +121,7 @@ export default function ItemCard({
 
       <div className="mt-3.5 flex items-center gap-4 text-xs">
         {item.translationZh && (
-          <Link href={href} className="font-medium underline-offset-2 hover:underline" style={{ color: "var(--teal)" }}>
+          <Link href={href} onClick={markRead} className="font-medium underline-offset-2 hover:underline" style={{ color: "var(--teal)" }}>
             阅读全文译文 →
           </Link>
         )}
@@ -120,6 +129,7 @@ export default function ItemCard({
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={markRead}
           className="underline-offset-2 hover:underline"
           style={{ color: "var(--ink-faint)" }}
         >

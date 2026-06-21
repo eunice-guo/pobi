@@ -1,5 +1,5 @@
 {
-  "_comment": "破壁 / GlobalInfo curated sources — the editorial moat. Buyside-filtered (X > Substack > podcasts; Discord excluded by design). Edit freely; the builder reads this. channel: x | substack | transcript. priority: P0 highest.",
+  "_comment": "破壁 / GlobalInfo curated sources — the editorial moat. Buyside-filtered (X > Substack > podcasts; Discord excluded by design). Edit freely; the builder reads this. channel: x | substack | transcript | research. research = 头部资管公开洞察/研究, pulled via public RSS (same path as substack). priority: P0 highest.",
   "sources": [
     { "handle": "dylan522p", "displayName": "Dylan Patel · SemiAnalysis", "channel": "x", "priority": "P0", "sectors": ["AI-SEMIS"], "enabled": true },
     { "handle": "Citrini7", "displayName": "Citrini Research", "channel": "x", "priority": "P0", "sectors": ["THEMATIC"], "enabled": true },
@@ -22,6 +22,11 @@
     { "handle": "https://www.mbi-deepdives.com/feed", "displayName": "Mostly Borrowed Ideas · MBI", "channel": "substack", "priority": "P1", "sectors": ["QUALITY"], "enabled": true },
     { "handle": "https://bestanchorstocks.substack.com/feed", "displayName": "Best Anchor Stocks", "channel": "substack", "priority": "P1", "sectors": ["QUALITY"], "enabled": true },
     { "handle": "https://www.generalist.com/feed", "displayName": "The Generalist · Mario Gabriele", "channel": "substack", "priority": "P1", "sectors": ["TECH-STRATEGY"], "enabled": true },
-    { "handle": "https://aswathdamodaran.blogspot.com/feeds/posts/default?alt=rss", "displayName": "Musings on Markets · Damodaran", "channel": "substack", "priority": "P2", "sectors": ["MACRO", "QUALITY"], "enabled": true }
+    { "handle": "https://aswathdamodaran.blogspot.com/feeds/posts/default?alt=rss", "displayName": "Musings on Markets · Damodaran", "channel": "substack", "priority": "P2", "sectors": ["MACRO", "QUALITY"], "enabled": true },
+
+    { "handle": "https://www.apolloacademy.com/feed/", "displayName": "Apollo Academy · Torsten Sløk（每日宏观图表）", "channel": "research", "priority": "P0", "sectors": ["MACRO", "ALLOCATION"], "enabled": true },
+    { "handle": "https://www.oaktreecapital.com/insights/memos/rss", "displayName": "Oaktree · Howard Marks Memos", "channel": "research", "priority": "P0", "sectors": ["MACRO", "ALLOCATION"], "enabled": true },
+    { "handle": "https://www.bridgewater.com/research-and-insights", "displayName": "Bridgewater · Research & Insights (disabled: 无公开 RSS, 待补合规拉取路径)", "channel": "research", "priority": "P0", "sectors": ["MACRO", "ALLOCATION"], "enabled": false },
+    { "handle": "https://www.carlyle.com/global-insights", "displayName": "Carlyle · Global Insights · Jason Thomas (disabled: 无公开 RSS, 待补合规拉取路径)", "channel": "research", "priority": "P1", "sectors": ["MACRO", "ALLOCATION"], "enabled": false }
   ]
 }

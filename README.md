@@ -15,7 +15,8 @@
    - 业绩记录：phase 2，从 simple-research 移植 EDGAR
    - Claude 忠实翻译 + 摘要 + ticker 标注，**需要 `ANTHROPIC_API_KEY`，没有则输出英文原文 + 标"翻译待生成"**（`scripts/lib/enrich.mjs`）
    - 写入 `public/feed/{latest,YYYY-MM-DD,index}.json` 并 commit
-2. **App**（Next.js）：读 `public/feed/latest.json`，每日 digest + 持仓筛选（localStorage）+「自上次访问以来的新内容」标记。
+   - 头部资管研究：公开 RSS（`channel: "research"`，与 Substack 同路径），如 Apollo Academy（Torsten Sløk）、Oaktree（Howard Marks Memos）。Bridgewater / Carlyle 无公开 RSS，已登记待补合规拉取路径。
+2. **App**（Next.js）：读 `public/feed/latest.json`，首屏「今日待读」（新的财报电话会 + 未读文章，逐篇已读状态存 localStorage）+ 每日 digest + 持仓筛选（localStorage）+「自上次访问以来的新内容」标记。
 
 信源在 `src/data/sources.json` —— 这是编辑性护城河，你来调。
 

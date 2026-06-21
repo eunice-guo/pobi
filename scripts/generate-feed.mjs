@@ -27,14 +27,16 @@ async function main() {
   // ---- ingest ----
   let items = [];
 
-  const substackSources = sources.filter((s) => s.channel === "substack");
-  for (const s of substackSources) {
+  // Substack authors + asset-manager research both arrive as RSS; the channel
+  // ("substack" | "research") is carried on each source and onto its items.
+  const rssSources = sources.filter((s) => s.channel === "substack" || s.channel === "research");
+  for (const s of rssSources) {
     try {
       const got = await fetchSubstack(s, sinceMs);
-      console.log(`  substack ${s.displayName}: ${got.length} item(s)`);
+      console.log(`  ${s.channel} ${s.displayName}: ${got.length} item(s)`);
       items.push(...got);
     } catch (err) {
-      const msg = `substack ${s.displayName} failed: ${err.message}`;
+      const msg = `${s.channel} ${s.displayName} failed: ${err.message}`;
       console.warn(`  ! ${msg}`);
       notes.push(msg);
     }

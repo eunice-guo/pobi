@@ -5,9 +5,11 @@ import { localDay, fullDateLabel } from "@/lib/date";
 import ItemCard from "./ItemCard";
 import Watchlist from "./Watchlist";
 import Calendar from "./Calendar";
+import TodayToRead from "./TodayToRead";
 
 const WATCH_KEY = "pobi.watchlist";
 const SEEN_KEY = "pobi.lastSeenAt";
+const READ_KEY = "pobi.readIds"; // per-item read state for 「今日待读」
 
 // 龙头 default watchlist — Magnificent 7 + AMD + SpaceX (private, tracked as a
 // pseudo-ticker). Seeded on first visit so the rail isn't empty; the user can
@@ -22,6 +24,7 @@ export default function DigestFeed() {
   const [selected, setSelected] = useState<string | null>(null); // ticker or null = all
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [lastSeen, setLastSeen] = useState<number>(0);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch("/feed/latest.json")
@@ -43,6 +46,8 @@ export default function DigestFeed() {
         setWatchlist(existing);
       }
       setLastSeen(Number(localStorage.getItem(SEEN_KEY) || 0));
+      const storedRead = localStorage.getItem(READ_KEY);
+      if (storedRead) setReadIds(new Set(JSON.parse(storedRead)));
     } catch {}
   }, []);
 
@@ -64,6 +69,22 @@ export default function DigestFeed() {
   const pickTicker = (t: string | null) => {
     setSelected(t);
     setSelectedDate(null); // reset date when scope changes
+  };
+
+  function persistRead(next: Set<string>) {
+    setReadIds(next);
+    try {
+      localStorage.setItem(READ_KEY, JSON.stringify([...next]));
+    } catch {}
+  }
+  const markRead = (id: string) => {
+    if (readIds.has(id)) return;
+    persistRead(new Set(readIds).add(id));
+  };
+  const markAllRead = (ids: string[]) => {
+    const next = new Set(readIds);
+    for (const id of ids) next.add(id);
+    persistRead(next);
   };
 
   const items: FeedItem[] = feed?.items ?? [];
@@ -100,7 +121,15 @@ export default function DigestFeed() {
     );
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[270px_minmax(0,1fr)]">
+    <>
+      <TodayToRead
+        items={items}
+        readIds={readIds}
+        selected={selected}
+        onRead={markRead}
+        onReadAll={markAllRead}
+      />
+      <div className="grid gap-8 lg:grid-cols-[270px_minmax(0,1fr)]">
       {/* LEFT — watchlist + calendar almanac */}
       <aside className="lg:sticky lg:top-8 lg:self-start">
         <div className="rounded-xl border p-4" style={{ background: "var(--paper-2)", borderColor: "var(--line)" }}>
@@ -160,10 +189,13 @@ export default function DigestFeed() {
               )}
             </div>
           ) : (
-            visible.map((i, idx) => <ItemCard key={i.id} item={i} isNew={isNew(i)} index={idx} watchlist={watchlist} />)
+            visible.map((i, idx) => (
+              <ItemCard key={i.id} item={i} isNew={isNew(i)} index={idx} watchlist={watchlist} onRead={markRead} />
+            ))
           )}
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

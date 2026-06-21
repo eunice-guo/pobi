@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import type { Feed, FeedItem } from "@/lib/types";
 import { fullDateLabel } from "@/lib/date";
 
-const CHANNEL_LABEL: Record<string, string> = { x: "X", substack: "Substack", transcript: "业绩记录" };
+const CHANNEL_LABEL: Record<string, string> = { x: "X", substack: "Substack", transcript: "财报电话会", research: "资管研究" };
 
 // Some translations echo the "标题：… 正文：" scaffold from the prompt — strip it.
 function cleanTranslation(t: string): string {

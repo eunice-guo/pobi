@@ -15,7 +15,25 @@
 
 ---
 
-## A. 「今日待读」首屏板块（核心）
+## ✅ 本分支已实施（claude/tech-transcript-todo-list-al5tsa）
+
+- **首屏「今日待读」**：新组件 `src/components/TodayToRead.tsx`，渲染在 `DigestFeed` 顶部。
+  聚合未读项，财报电话会优先、其余按时间倒序；逐篇「已读/未读」状态存 localStorage
+  `pobi.readIds`（点标题 / 译文 / 原文 / 「已读」按钮即标记已读，刷新后从清单移出）；
+  支持 watchlist ticker 联动、「全部已读」、收起/展开、空态「今天的都读完了 ✓」。
+- **资管研究 channel**：`Channel` 增加 `"research"`（`src/lib/types.ts`）；RSS 拉取器
+  `scripts/lib/rss.mjs` 改为按 `source.channel` 通用化；`generate-feed.mjs` 把 substack +
+  research 一起走 RSS 路径；`ItemCard` / `read` 页加「资管研究」「财报电话会」角标。
+- **信源**：`sources.json` 新增 Apollo Academy（Torsten Sløk）、Oaktree（Howard Marks Memos）
+  为 `research` 且 enabled；**Bridgewater / Carlyle 已登记但 enabled:false**（无公开 RSS，待补合规拉取路径）。
+- 验证：`tsc --noEmit` 与 `next build` 均通过。
+
+**仍待办**：① earnings call transcript 的 builder 接线（下方 C，仍是占位）；
+② Bridgewater / Carlyle 等无 RSS 资管源的合规拉取路径（官方 API / 公开页，禁爬墙）。
+
+---
+
+## A. 「今日待读」首屏板块（核心）— ✅ 已实施
 
 现状：`DigestFeed.tsx` 已有 `pobi.lastSeenAt` 时间戳 + `isNew()`（发布时间晚于上次访问就标新），
 但**没有真正的逐篇「已读/未读」状态**，也没有独立的「今日待读」入口。

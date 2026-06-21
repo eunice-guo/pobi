@@ -14,8 +14,8 @@ export default function Home() {
               </span>
             </h1>
             <p className="mt-3 max-w-xl text-[15px] leading-relaxed" style={{ color: "var(--ink-soft)" }}>
-              打破中美投资信息差。可信英文一手信源（X / Substack / 业绩记录）→ 忠实中文翻译 + 摘要，
-              按 watchlist 跟踪每日动态。
+              打破中美投资信息差。可信英文一手信源（X / Substack / 财报电话会 / 头部资管研究）→ 忠实中文翻译 + 摘要，
+              打开即见「今日待读」，按 watchlist 跟踪每日动态。
             </p>
           </div>
           <span className="hidden shrink-0 font-mono text-[11px] uppercase tracking-[0.18em] sm:block" style={{ color: "var(--ink-faint)" }}>
