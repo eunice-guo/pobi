@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import type { Feed, FeedItem } from "@/lib/types";
 import { fullDateLabel } from "@/lib/date";
 
-const CHANNEL_LABEL: Record<string, string> = { x: "X", substack: "Substack", transcript: "业绩记录", research: "资管观点" };
+const CHANNEL_LABEL: Record<string, string> = { x: "X", substack: "Substack", transcript: "业绩记录", research: "资管观点", podcast: "播客访谈", bookmark: "收藏", paper: "论文" };
 
 // Some translations echo the "标题：… 正文：" scaffold from the prompt — strip it.
 function cleanTranslation(t: string): string {
@@ -81,10 +81,16 @@ function Reader() {
         </div>
       </div>
 
-      <div className="mt-10 flex items-center gap-5 border-t pt-5 text-sm" style={{ borderColor: "var(--line)" }}>
+      <div className="mt-10 flex flex-wrap items-center gap-5 border-t pt-5 text-sm" style={{ borderColor: "var(--line)" }}>
         <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-medium underline-offset-2 hover:underline" style={{ color: "var(--teal)" }}>
-          阅读英文原文全文 ↗
+          {item.channel === "podcast" ? "观看访谈" : item.channel === "bookmark" ? "打开原文" : "阅读英文原文全文"}
+          {item.platform ? ` · ${item.platform}` : ""} ↗
         </a>
+        {item.altUrl && (
+          <a href={item.altUrl} target="_blank" rel="noopener noreferrer" className="font-medium underline-offset-2 hover:underline" style={{ color: "var(--teal)" }}>
+            {item.altPlatform ?? "镜像"} ↗
+          </a>
+        )}
         <span className="font-mono text-[11px]" style={{ color: "var(--ink-faint)" }}>忠实翻译 · 节选 · 不给买卖建议</span>
       </div>
     </Shell>

@@ -16,6 +16,8 @@ const CHANNELS: { key: string | null; label: string }[] = [
   { key: null, label: "全部" },
   { key: "transcript", label: "业绩记录" },
   { key: "research", label: "资管观点" },
+  { key: "podcast", label: "播客访谈" },
+  { key: "bookmark", label: "收藏" },
   { key: "substack", label: "Substack" },
   { key: "x", label: "X" },
 ];

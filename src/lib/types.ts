@@ -1,6 +1,6 @@
 // Shared shape between the builder (writes JSON) and the app (reads JSON).
 
-export type Channel = "x" | "substack" | "transcript" | "research";
+export type Channel = "x" | "substack" | "transcript" | "research" | "podcast" | "bookmark" | "paper";
 
 export interface Source {
   handle: string; // X username, or RSS URL for substack
@@ -27,6 +27,12 @@ export interface FeedItem {
   sectors: string[];
   secondHand: true;
   enriched: boolean;
+  // optional metadata for curated channels (podcast / bookmark); ignored elsewhere
+  guest?: string | null;
+  platform?: string | null; // e.g. "YouTube", "Bilibili"
+  altUrl?: string | null; // mirror link (e.g. Bilibili for 国内 viewers)
+  altPlatform?: string | null;
+  kind?: string | null; // bookmark: "course" | "article" | "paper"
 }
 
 export interface Feed {

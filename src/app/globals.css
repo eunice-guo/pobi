@@ -1,27 +1,43 @@
 @import "tailwindcss";
 
-/* 破壁 / GlobalInfo — warm newsprint almanac × quiet trading terminal.
-   Deep-teal "I read the filings" accent, flag-red for what's new. */
+/* 破壁 / GlobalInfo — Option C (阅读 Triage) design system.
+   Ink-on-paper editorial calm; cinnabar (朱/seal) accent used sparingly as a
+   stamp, never a fill. Tokens authored in oklch per the design handoff. */
 :root {
-  --paper: #f7f3ea;
-  --paper-2: #f1ebdd;
-  --surface: #fffdf8;
-  --ink: #1b1916;
-  --ink-soft: #5b554c;
-  --ink-faint: #948c7e;
-  --line: #e3dccd;
-  --line-soft: #ece5d6;
-  --teal: #0f5b56;
-  --teal-soft: #e4efed;
-  --flag: #b4351f;
-  --flag-soft: #f6e3dd;
+  /* Option C palette */
+  --paper: oklch(0.987 0.004 85); /* app background, warm near-white */
+  --surface: oklch(1 0 0); /* cards, list rows, panes */
+  --wash: oklch(0.966 0.006 80); /* selected row, 摘要 box */
+  --ink: oklch(0.255 0.012 60); /* primary text, dark buttons */
+  --ink-soft: oklch(0.42 0.012 60); /* body copy, secondary labels */
+  --muted: oklch(0.6 0.01 60); /* tertiary text, summaries */
+  --faint: oklch(0.72 0.008 65); /* timestamps, meta, mono captions */
+  --line: oklch(0.915 0.005 75); /* hairline dividers */
+  --line-strong: oklch(0.85 0.006 75); /* unread-dot ring, stronger rules */
+  --seal: oklch(0.55 0.18 33); /* brand accent — cinnabar/朱 */
+  --seal-wash: oklch(0.55 0.18 33 / 0.08); /* faint seal tint for "on" states */
+  --seal-line: oklch(0.55 0.18 33 / 0.4);
+  --up: oklch(0.58 0.09 155); /* reserved positive */
+  --down: oklch(0.55 0.16 28); /* reserved negative */
+
+  /* legacy tokens kept so the standalone /read route still renders */
+  --paper-2: oklch(0.966 0.006 80);
+  --line-soft: oklch(0.94 0.005 78);
+  --ink-faint: var(--faint);
+  --teal: var(--seal);
+  --teal-soft: var(--seal-wash);
+  --flag: var(--seal);
+  --flag-soft: var(--seal-wash);
   --gold: #9a6a16;
 }
 
 @theme {
-  /* next/font sets --font-fraunces / --font-jb on <html>; expose as utilities */
-  --font-display: var(--font-fraunces), Georgia, "Songti SC", serif;
-  --font-mono: var(--font-jb), ui-monospace, "SF Mono", monospace;
+  /* next/font sets the Latin variables on <html>; CJK companions load via <link>.
+     Songti/PingFang are the system fallback for Han glyphs. */
+  --font-serif: var(--font-newsreader), "Noto Serif SC", Georgia, "Songti SC", serif;
+  --font-display: var(--font-newsreader), "Noto Serif SC", Georgia, "Songti SC", serif;
+  --font-sans: var(--font-instrument), "Noto Sans SC", "PingFang SC", system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
 }
 
 html {
@@ -36,8 +52,7 @@ html {
 }
 
 body {
-  font-family: ui-sans-serif, system-ui, "PingFang SC", -apple-system,
-    "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .font-display {
@@ -50,9 +65,18 @@ body {
 }
 
 ::selection {
-  background: var(--teal);
+  background: var(--seal);
   color: var(--paper);
 }
+
+/* Option C reading body — serif Han for the full translation */
+.reading-serif {
+  font-family: var(--font-serif);
+  text-wrap: pretty;
+}
+/* hide scrollbar on the segmented filter / horizontal rails */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 ::-webkit-scrollbar {
   width: 10px;
@@ -131,19 +155,27 @@ body {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #14120d;
-    --paper-2: #1a1711;
-    --surface: #1e1b15;
-    --ink: #f1ece1;
-    --ink-soft: #b3ab9c;
-    --ink-faint: #7d7567;
-    --line: #312c22;
-    --line-soft: #272219;
-    --teal: #5fb8af;
-    --teal-soft: #16302c;
-    --flag: #e0775f;
-    --flag-soft: #2e1c16;
+    --paper: oklch(0.18 0.008 70);
+    --surface: oklch(0.215 0.009 70);
+    --wash: oklch(0.255 0.01 70);
+    --ink: oklch(0.93 0.008 80);
+    --ink-soft: oklch(0.78 0.01 78);
+    --muted: oklch(0.62 0.01 72);
+    --faint: oklch(0.52 0.01 70);
+    --line: oklch(0.31 0.008 72);
+    --line-strong: oklch(0.4 0.009 72);
+    --seal: oklch(0.68 0.16 35);
+    --seal-wash: oklch(0.68 0.16 35 / 0.14);
+    --seal-line: oklch(0.68 0.16 35 / 0.45);
+
+    --paper-2: oklch(0.235 0.009 70);
+    --line-soft: oklch(0.27 0.008 72);
+    --ink-faint: var(--faint);
+    --teal: var(--seal);
+    --teal-soft: var(--seal-wash);
+    --flag: var(--seal);
+    --flag-soft: var(--seal-wash);
     --gold: #c79a4f;
   }
-  .cal-cell.has:hover { background: #1d3b36; }
+  .cal-cell.has:hover { background: var(--wash); }
 }

@@ -9,6 +9,7 @@ import { dirname, join } from "node:path";
 import { fetchSubstack } from "./lib/rss.mjs";
 import { fetchX } from "./lib/x.mjs";
 import { fetchEarnings } from "./lib/edgar.mjs";
+import { fetchPodcasts, fetchBookmarks, fetchPapers } from "./lib/curated.mjs";
 import { makeEnricher } from "./lib/enrich.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -76,6 +77,36 @@ async function main() {
     notes.push(msg);
   }
 
+  // curated standing queues (播客访谈 + 收藏): hand-picked, evergreen, link-style.
+  // Not gated by lookback. Ship pre-enriched (faithful Chinese already written).
+  try {
+    const got = await fetchPodcasts(join(ROOT, "src", "data", "podcasts.json"));
+    console.log(`  podcasts: ${got.length} 访谈`);
+    items.push(...got);
+  } catch (err) {
+    const msg = `podcasts failed: ${err.message}`;
+    console.warn(`  ! ${msg}`);
+    notes.push(msg);
+  }
+  try {
+    const got = await fetchBookmarks(join(ROOT, "src", "data", "bookmarks.json"));
+    console.log(`  bookmarks: ${got.length} 收藏`);
+    items.push(...got);
+  } catch (err) {
+    const msg = `bookmarks failed: ${err.message}`;
+    console.warn(`  ! ${msg}`);
+    notes.push(msg);
+  }
+  try {
+    const got = await fetchPapers(join(ROOT, "src", "data", "papers.json"));
+    console.log(`  papers: ${got.length} 论文`);
+    items.push(...got);
+  } catch (err) {
+    const msg = `papers failed: ${err.message}`;
+    console.warn(`  ! ${msg}`);
+    notes.push(msg);
+  }
+
   // newest first
   items.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
 
@@ -97,6 +128,8 @@ async function main() {
     const take = (arr) => {
       for (const it of arr) {
         if (queue.length >= MAX_ENRICH) break;
+        // skip already-enriched (curated 播客/收藏 ship with faithful Chinese)
+        if (it.enriched) continue;
         if (!seen.has(it.id)) { seen.add(it.id); queue.push(it); }
       }
     };

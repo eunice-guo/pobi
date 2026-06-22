@@ -3,10 +3,14 @@ import Link from "next/link";
 import type { FeedItem } from "@/lib/types";
 import { dayLabel } from "@/lib/date";
 
-const CHANNEL_LABEL: Record<string, string> = { x: "X", substack: "Substack", transcript: "业绩记录", research: "资管观点" };
+const CHANNEL_LABEL: Record<string, string> = { x: "X", substack: "Substack", transcript: "业绩记录", research: "资管观点", podcast: "播客访谈", bookmark: "收藏", paper: "论文" };
 const SECTOR_LABEL: Record<string, string> = {
   "CHINA-TECH": "中国科技",
   "AI-SEMIS": "AI · 半导体",
+  "AI-RESEARCH": "AI 研究",
+  "WORLD-MODEL": "世界模型",
+  ROBOTICS: "机器人",
+  COURSE: "课程",
   THEMATIC: "主题",
   SOFTWARE: "软件",
   QUALITY: "优质公司",
@@ -17,6 +21,13 @@ const SECTOR_LABEL: Record<string, string> = {
   SHORT: "做空",
   EARNINGS: "业绩",
   "ASSET-MGR": "资管",
+};
+
+// Per-channel label for the external-source link at the card footer.
+const SOURCE_LINK_LABEL: Record<string, string> = {
+  transcript: "SEC 原文 ↗",
+  podcast: "看访谈 ↗",
+  bookmark: "打开原文 ↗",
 };
 
 export default function ItemCard({
@@ -138,8 +149,21 @@ export default function ItemCard({
           className="underline-offset-2 hover:underline"
           style={{ color: "var(--ink-faint)" }}
         >
-          {item.channel === "transcript" ? "SEC 原文 ↗" : "原文 ↗"}
+          {SOURCE_LINK_LABEL[item.channel] ?? "原文 ↗"}
+          {item.platform ? ` · ${item.platform}` : ""}
         </a>
+        {item.altUrl && (
+          <a
+            href={item.altUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={markRead}
+            className="underline-offset-2 hover:underline"
+            style={{ color: "var(--ink-faint)" }}
+          >
+            {item.altPlatform ?? "镜像"} ↗
+          </a>
+        )}
         {onToggleRead && (
           <button
             type="button"

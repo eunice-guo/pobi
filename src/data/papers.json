@@ -1,0 +1,104 @@
+{
+  "_comment": "破壁 / GlobalInfo — 论文 channel (常驻精选, not lookback-gated). World-model reading list sourced from the 'Saturday Robotics & World Models Reading Club' (SF, hosted by Junfan Zhu & Aurora Feng on Luma). These are the canonical 'Learning to Dream' world-model papers (Reading Club #07), each linked to its arXiv original — 永远链接原文, 绝不编造. The builder (scripts/lib/curated.mjs) turns each into a link-style read-queue item; all are seeded into 待读清单. date = the paper's arXiv month. summaryZh is a faithful editorial note. Source: https://luma.com/srhe0vuo",
+  "papers": [
+    {
+      "id": "wm-ha-schmidhuber-2018",
+      "venue": "NeurIPS 2018",
+      "authors": "David Ha, Jürgen Schmidhuber",
+      "title": "World Models（世界模型 · 开山之作）",
+      "url": "https://arxiv.org/abs/1803.10122",
+      "date": "2018-03-01",
+      "sectors": ["WORLD-MODEL", "ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "世界模型领域的奠基论文：智能体先学一个对环境的压缩生成式「世界模型」(VAE + RNN)，再在这个「想象」出来的模型里训练控制策略，而非直接在真实环境里试错。提出了「在模型内做梦式训练」的范式，是后续 Dreamer 系列的思想源头。理解具身智能与机器人「世界模型」叙事的起点。",
+      "descEn": "Foundational world-models paper (Ha & Schmidhuber): an agent learns a compressed generative 'world model' (VAE + RNN) of its environment, then trains its controller inside that imagined model rather than the real environment. Introduces the 'train by dreaming inside the model' paradigm that the later Dreamer line builds on. The starting point for understanding the embodied-AI / robotics 'world model' narrative."
+    },
+    {
+      "id": "wm-planet-2018",
+      "venue": "ICML 2019",
+      "authors": "Hafner et al.",
+      "title": "PlaNet：从像素学习的隐空间动力学规划",
+      "url": "https://arxiv.org/abs/1811.04551",
+      "date": "2018-11-01",
+      "sectors": ["WORLD-MODEL", "AI-RESEARCH"],
+      "summaryZh": "Deep Planning Network (PlaNet)：直接从像素学习一个隐空间的环境动力学模型，并在隐空间中做规划，用远少于无模型 RL 的交互次数完成连续控制任务。把「学动力学 + 规划」推进到高维视觉输入，是 Dreamer 的前身。",
+      "descEn": "PlaNet (Deep Planning Network): learns a latent-space dynamics model directly from pixels and plans in that latent space, solving continuous-control tasks with far fewer environment interactions than model-free RL. Pushes 'learn dynamics + plan' to high-dimensional visual input; the direct precursor to Dreamer."
+    },
+    {
+      "id": "wm-dreamer-2019",
+      "venue": "ICLR 2020",
+      "authors": "Hafner et al.",
+      "title": "Dream to Control（Dreamer）：在隐空间想象中学习行为",
+      "url": "https://arxiv.org/abs/1912.01603",
+      "date": "2019-12-01",
+      "sectors": ["WORLD-MODEL", "AI-RESEARCH"],
+      "summaryZh": "Dreamer：在学到的隐空间世界模型里「想象」长程轨迹，并通过可微分的价值反传来高效学习策略与价值函数。在仅用世界模型的情况下大幅超越此前方法，奠定了 DreamerV2/V3 的整体框架。",
+      "descEn": "Dreamer: learns behaviors by 'imagining' long-horizon trajectories inside a learned latent world model and propagating analytic value gradients back through it, learning policy and value functions efficiently. Substantially outperforms prior methods using only the world model; establishes the framework carried into DreamerV2/V3."
+    },
+    {
+      "id": "wm-dreamerv2-2020",
+      "venue": "ICLR 2021",
+      "authors": "Hafner et al.",
+      "title": "Mastering Atari with Discrete World Models（DreamerV2）",
+      "url": "https://arxiv.org/abs/2010.02193",
+      "date": "2020-10-01",
+      "sectors": ["WORLD-MODEL", "AI-RESEARCH"],
+      "summaryZh": "DreamerV2：用离散隐变量的世界模型，在 Atari 上首次让「纯在世界模型里训练」的智能体达到人类水平，且只用单块 GPU。证明了离散表征对世界模型的有效性。",
+      "descEn": "DreamerV2: a world model with discrete latent variables that, for the first time, lets an agent trained purely inside the world model reach human-level performance on Atari — on a single GPU. Demonstrates the effectiveness of discrete representations for world models."
+    },
+    {
+      "id": "wm-dreamerv3-2023",
+      "venue": "Nature 2025",
+      "authors": "Hafner et al.",
+      "title": "Mastering Diverse Domains through World Models（DreamerV3）",
+      "url": "https://arxiv.org/abs/2301.04104",
+      "date": "2023-01-01",
+      "sectors": ["WORLD-MODEL", "ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "DreamerV3：一套固定超参的世界模型算法横跨 150+ 任务（含从零在 Minecraft 中挖到钻石，无需人类数据），展示了世界模型方法的通用性与可扩展性。是「通用控制基础模型」叙事的关键一步。",
+      "descEn": "DreamerV3: a single world-model algorithm with fixed hyperparameters that succeeds across 150+ tasks (including collecting diamonds from scratch in Minecraft with no human data), showing the generality and scalability of world-model methods. A key step toward the 'foundation model for control' narrative."
+    },
+    {
+      "id": "wm-daydreamer-2022",
+      "venue": "CoRL 2022",
+      "authors": "Wu et al.",
+      "title": "DayDreamer：用世界模型让真实机器人快速在线学习",
+      "url": "https://arxiv.org/abs/2206.14176",
+      "date": "2022-06-01",
+      "sectors": ["WORLD-MODEL", "ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "DayDreamer：把 Dreamer 直接搬到真实物理机器人上，让四足、机械臂等在数小时内、无需仿真即可在线学会运动与操作技能。世界模型「样本效率高」这一优势在真机上的有力验证，对机器人落地极具参考意义。",
+      "descEn": "DayDreamer: applies Dreamer directly on real physical robots, letting quadrupeds, arms and others learn locomotion and manipulation online within hours and without simulation. A strong real-world validation of the sample-efficiency advantage of world models — highly relevant to robotics deployment."
+    },
+    {
+      "id": "wm-director-2022",
+      "venue": "NeurIPS 2022",
+      "authors": "Hafner et al.",
+      "title": "Director：在世界模型中进行分层规划",
+      "url": "https://arxiv.org/abs/2206.04114",
+      "date": "2022-06-01",
+      "sectors": ["WORLD-MODEL", "AI-RESEARCH"],
+      "summaryZh": "Director：在学到的世界模型隐空间里做分层强化学习——高层管理者设定子目标、低层工人执行，从而解决需要长程探索的稀疏奖励任务。把世界模型与分层决策结合的代表作。",
+      "descEn": "Director: hierarchical reinforcement learning inside the latent space of a learned world model — a high-level manager sets subgoals and a low-level worker executes them, solving sparse-reward tasks that require long-horizon exploration. A representative combination of world models with hierarchical decision-making."
+    },
+    {
+      "id": "wm-dynalang-2023",
+      "venue": "ICML 2024",
+      "authors": "Lin et al.",
+      "title": "Dynalang：用语言预测未来的多模态世界模型",
+      "url": "https://arxiv.org/abs/2308.01399",
+      "date": "2023-08-01",
+      "sectors": ["WORLD-MODEL", "AI-RESEARCH"],
+      "summaryZh": "Dynalang：让智能体通过预测未来的文本与图像来学习一个多模态世界模型，从而真正「用语言理解世界」并据此行动。把语言纳入世界模型预测目标，连接了大模型与具身控制两条线。",
+      "descEn": "Dynalang: an agent learns a multimodal world model by predicting future text and images, so it can genuinely 'understand the world through language' and act on it. By folding language into the world model's prediction targets, it bridges large language models and embodied control."
+    },
+    {
+      "id": "wm-dreamer4-2025",
+      "venue": "2025",
+      "authors": "Hafner et al.",
+      "title": "Training Agents Inside of Scalable World Models（Dreamer 4）",
+      "url": "https://arxiv.org/abs/2509.24527",
+      "date": "2025-09-01",
+      "sectors": ["WORLD-MODEL", "ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "可扩展世界模型中的智能体训练（Dreamer 4）：把世界模型扩展到更大规模、更复杂的环境，朝「面向控制的基础模型」迈进，让智能体几乎完全在想象出的世界里学习复杂任务。世界模型走向规模化的最新一步。",
+      "descEn": "Training Agents Inside of Scalable World Models (Dreamer 4): scales world models to larger, more complex environments toward a 'foundation model for control', letting agents learn complex tasks almost entirely inside an imagined world. The latest step in scaling up world models."
+    }
+  ]
+}

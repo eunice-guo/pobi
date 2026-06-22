@@ -1,0 +1,41 @@
+{
+  "_comment": "破壁 / GlobalInfo — 收藏 channel (常驻精选, not lookback-gated). Curated good articles & courses worth keeping and re-reading. The builder (scripts/lib/curated.mjs) turns each into a link-style read-queue item: real resource, always linked, 绝不编造. kind: course | article | paper. url = canonical link. date = the resource's publish / edition date (evergreen items sort oldest-last, which is fine). summaryZh is a faithful editorial note on why it's worth reading. Add freely.",
+  "bookmarks": [
+    {
+      "id": "cs336-stanford-2025",
+      "kind": "course",
+      "source": "Stanford",
+      "sourceZh": "斯坦福 CS336",
+      "title": "CS336：从零构建语言模型（Stanford · 2025 春）",
+      "url": "https://cs336.stanford.edu/spring2025/",
+      "date": "2025-04-01",
+      "sectors": ["COURSE", "AI-RESEARCH"],
+      "summaryZh": "斯坦福 CS336《Language Modeling from Scratch》2025 春季课程主页：从数据、分词、Transformer 架构、训练、并行到对齐，带学生从零亲手实现一个语言模型。讲义、作业与阅读全部公开。想真正搞懂 LLM「里面到底发生了什么」、不止停留在概念层的最佳系统性课程之一。",
+      "descEn": "Stanford CS336 'Language Modeling from Scratch' (Spring 2025) course homepage: from data, tokenization, Transformer architecture, training and parallelism to alignment, building a language model from scratch. Lectures, assignments and readings are public. One of the best systematic courses for actually understanding what happens inside an LLM rather than staying at the concept level."
+    },
+    {
+      "id": "karpathy-zero-to-hero",
+      "kind": "course",
+      "source": "Andrej Karpathy",
+      "sourceZh": "Andrej Karpathy",
+      "title": "Neural Networks: Zero to Hero（Karpathy 从零到精通）",
+      "url": "https://karpathy.ai/zero-to-hero.html",
+      "date": "2023-01-01",
+      "sectors": ["COURSE", "AI-RESEARCH"],
+      "summaryZh": "Andrej Karpathy 的免费视频课程：从手写反向传播 (micrograd) 一路讲到自己实现 GPT (nanoGPT)，每节课都边写代码边讲原理。零基础到能读懂大模型代码的经典入门路径，配套代码全部开源。",
+      "descEn": "Andrej Karpathy's free video course: from hand-coding backpropagation (micrograd) all the way to building GPT from scratch (nanoGPT), writing code live while explaining the principles. A classic path from zero to reading frontier-model code, with all companion code open-sourced."
+    },
+    {
+      "id": "illustrated-transformer",
+      "kind": "article",
+      "source": "Jay Alammar",
+      "sourceZh": "Jay Alammar",
+      "title": "The Illustrated Transformer（图解 Transformer）",
+      "url": "https://jalammar.github.io/illustrated-transformer/",
+      "date": "2018-06-27",
+      "sectors": ["AI-RESEARCH"],
+      "summaryZh": "Jay Alammar 的经典图解长文，用大量可视化把 Transformer 的注意力机制、编码器-解码器结构讲清楚。几乎是理解现代大模型架构绕不开的入门读物，无需数学背景也能读懂主干。",
+      "descEn": "Jay Alammar's classic illustrated explainer that uses heavy visualization to make the Transformer's attention mechanism and encoder-decoder structure clear. Almost unavoidable as an entry point for understanding modern large-model architecture, readable without a math background."
+    }
+  ]
+}
