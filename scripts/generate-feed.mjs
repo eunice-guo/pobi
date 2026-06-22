@@ -87,14 +87,31 @@ async function main() {
     console.log("  enrichment: SKIPPED (no key)");
   } else {
     enriched = true;
-    const slice = items.slice(0, MAX_ENRICH);
-    console.log(`  enrichment: ${slice.length} item(s) via OpenRouter free chain${process.env.ENRICH_MODEL ? ` (primary ${process.env.ENRICH_MODEL})` : ""}`);
-    for (let i = 0; i < slice.length; i++) {
+    // Priority for translation (within the MAX_ENRICH budget): 业绩记录 + 资管观点
+    // first — they're the curated, standing read-list and the user's explicit
+    // asks, and their filing dates sort old, so date-order alone starves them.
+    // Then fill the rest by recency. Enrich by object reference (display order
+    // is still the date sort above).
+    const seen = new Set();
+    const queue = [];
+    const take = (arr) => {
+      for (const it of arr) {
+        if (queue.length >= MAX_ENRICH) break;
+        if (!seen.has(it.id)) { seen.add(it.id); queue.push(it); }
+      }
+    };
+    take(items.filter((i) => i.channel === "transcript"));
+    take(items.filter((i) => i.channel === "research"));
+    take(items); // remainder, already newest-first
+    const idxById = new Map(items.map((it, idx) => [it.id, idx]));
+    console.log(`  enrichment: ${queue.length} item(s) via OpenRouter free chain${process.env.ENRICH_MODEL ? ` (primary ${process.env.ENRICH_MODEL})` : ""} (业绩记录/资管观点 prioritized)`);
+    for (let k = 0; k < queue.length; k++) {
+      const idx = idxById.get(queue[k].id);
       try {
-        items[i] = await enrich(slice[i]);
-        process.stdout.write(`\r  enriched ${i + 1}/${slice.length}`);
+        items[idx] = await enrich(items[idx]);
+        process.stdout.write(`\r  enriched ${k + 1}/${queue.length}`);
       } catch (err) {
-        console.warn(`\n  ! enrich failed for ${slice[i].id}: ${err.message}`);
+        console.warn(`\n  ! enrich failed for ${queue[k].id}: ${err.message}`);
       }
     }
     process.stdout.write("\n");
