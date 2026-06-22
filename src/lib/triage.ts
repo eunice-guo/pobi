@@ -2,6 +2,22 @@
 // avatar/initials/tint, platform label, reading-time estimate, clean meta.
 import type { Channel, FeedItem } from "./types";
 
+// Curated channels are managed as individual items; subscription channels
+// (x/substack/research) are managed by their source handle.
+export const CURATED_CHANNELS = new Set<Channel>(["podcast", "bookmark", "paper"]);
+
+// localStorage keys shared by the /sources manager (writes) and the inbox
+// (reads): disabled source identifiers (hide items live) + display-name renames.
+export const DISABLED_SOURCES_KEY = "pobi.disabledSources";
+export const RENAMES_KEY = "pobi.sourceRenames";
+
+// Stable identity for "which source is this item from", matching the keys the
+// /sources page assigns: a curated item is keyed by its own id; a subscription
+// item is keyed by its source handle (== item.author for x/substack/research).
+export function sourceKeyOf(item: FeedItem): string {
+  return CURATED_CHANNELS.has(item.channel) ? item.id : item.author;
+}
+
 export const CHANNEL_META: Record<string, { label: string; seal: boolean }> = {
   transcript: { label: "业绩记录", seal: true },
   research: { label: "资管观点", seal: false },
@@ -62,16 +78,16 @@ export const SECTOR_LABEL: Record<string, string> = {
   "ASSET-MGR": "资管",
 };
 
-// Warm, muted avatar tints — deterministic per source so it stays stable.
+// Avatar tints — the reference oklch palette (shared.jsx / option-c-sources.jsx),
+// assigned deterministically per source so each stays stable.
 const TINTS = [
-  "#B23A2B", // seal
-  "#6E5536",
-  "#3F6B5E",
-  "#5A5B7A",
-  "#8A5A2B",
-  "#4E6B82",
-  "#7A4A55",
-  "#566B3E",
+  "oklch(0.62 0.13 250)",
+  "oklch(0.55 0.10 150)",
+  "oklch(0.60 0.14 50)",
+  "oklch(0.50 0.12 280)",
+  "oklch(0.58 0.11 200)",
+  "oklch(0.56 0.12 320)",
+  "oklch(0.52 0.11 30)",
 ];
 
 function hash(s: string): number {

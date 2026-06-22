@@ -34,10 +34,10 @@
 @theme {
   /* next/font sets the Latin variables on <html>; CJK companions load via <link>.
      Songti/PingFang are the system fallback for Han glyphs. */
-  --font-serif: var(--font-newsreader), "Noto Serif SC", Georgia, "Songti SC", serif;
-  --font-display: var(--font-newsreader), "Noto Serif SC", Georgia, "Songti SC", serif;
-  --font-sans: var(--font-instrument), "Noto Sans SC", "PingFang SC", system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
+  --font-serif: var(--font-newsreader), "Noto Serif SC", Georgia, serif;
+  --font-display: var(--font-newsreader), "Noto Serif SC", Georgia, serif;
+  --font-sans: var(--font-instrument), "Noto Sans SC", -apple-system, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
 html {
@@ -65,8 +65,7 @@ body {
 }
 
 ::selection {
-  background: var(--seal);
-  color: var(--paper);
+  background: color-mix(in oklch, var(--seal) 22%, transparent);
 }
 
 /* Option C reading body — serif Han for the full translation */

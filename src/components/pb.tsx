@@ -1,51 +1,70 @@
-// 破壁 GlobalInfo — Option C shared presentation components.
-// Ported from the design handoff (reference/shared.jsx): brand seal, source
-// avatar, platform tag, and the standing disclaimer. Pure presentational.
+// 破壁 GlobalInfo — shared UI atoms, ported 1:1 from the design reference
+// (reference/shared.jsx). Consume the CSS custom properties in globals.css.
 
-export function PBBrand({ size = 28 }: { size?: number }) {
+export function PBBrand({ size = 30 }: { size?: number }) {
   return (
-    <div className="flex items-center gap-2.5">
+    <div style={{ display: "flex", alignItems: "center", gap: size * 0.34 }}>
       <div
-        className="grid shrink-0 place-items-center font-serif font-semibold text-[var(--paper)]"
         style={{
           width: size,
           height: size,
-          borderRadius: size * 0.26,
+          borderRadius: size * 0.2,
+          flex: "0 0 auto",
           background: "var(--seal)",
-          fontSize: size * 0.5,
+          color: "#fff",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontFamily: "var(--font-serif)",
+          fontWeight: 600,
+          fontSize: size * 0.62,
           lineHeight: 1,
+          letterSpacing: "-0.02em",
+          boxShadow: "0 1px 0 rgba(0,0,0,0.04)",
         }}
         aria-hidden
       >
         破
       </div>
-      <div className="leading-none">
-        <div className="font-serif text-[17px] font-semibold tracking-tight text-[var(--ink)]">破壁</div>
-        <div className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--faint)]">GlobalInfo</div>
+      <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+        <span style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: size * 0.6, color: "var(--ink)", letterSpacing: "0.02em" }}>
+          破壁
+        </span>
+        <span
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: size * 0.3,
+            letterSpacing: "0.18em",
+            color: "var(--faint)",
+            textTransform: "uppercase",
+            marginTop: size * 0.12,
+          }}
+        >
+          GlobalInfo
+        </span>
       </div>
     </div>
   );
 }
 
-export function PBAvatar({
-  initials,
-  tint,
-  size = 18,
-}: {
-  initials: string;
-  tint: string;
-  size?: number;
-}) {
+// Rounded-square monogram tinted per source.
+export function PBAvatar({ initials, tint, size = 36 }: { initials: string; tint: string; size?: number }) {
   return (
     <div
-      className="grid shrink-0 place-items-center font-mono font-semibold uppercase text-[var(--surface)]"
       style={{
         width: size,
         height: size,
         borderRadius: size * 0.26,
+        flex: "0 0 auto",
         background: tint,
-        fontSize: size * 0.42,
-        lineHeight: 1,
+        color: "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "var(--font-mono)",
+        fontWeight: 600,
+        fontSize: size * 0.4,
+        letterSpacing: "0.01em",
       }}
       aria-hidden
     >
@@ -54,36 +73,68 @@ export function PBAvatar({
   );
 }
 
-export function PBPlatform({ name, seal = false }: { name: string; seal?: boolean }) {
+// 业绩记录 reads as the cinnabar accent; X gets an ink dot; others stay quiet.
+export function PBPlatform({ name }: { name: string }) {
+  const isTrack = name === "业绩记录";
+  const isX = name === "X";
   return (
     <span
-      className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.08em]"
-      style={{ color: seal ? "var(--seal)" : "var(--faint)" }}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 5,
+        flex: "0 0 auto",
+        fontFamily: "var(--font-mono)",
+        fontSize: 10.5,
+        fontWeight: 500,
+        letterSpacing: "0.04em",
+        color: isTrack ? "var(--seal)" : "var(--muted)",
+        whiteSpace: "nowrap",
+      }}
     >
       <span
-        className="inline-block h-[5px] w-[5px] rounded-full"
-        style={{ background: seal ? "var(--seal)" : "var(--line-strong)" }}
+        style={{
+          width: 5,
+          height: 5,
+          borderRadius: 999,
+          flex: "0 0 auto",
+          background: isTrack ? "var(--seal)" : isX ? "var(--ink)" : "var(--faint)",
+        }}
       />
       {name}
     </span>
   );
 }
 
+// "忠实翻译 · 非投资建议" — the product's standing promise. compact = inline pill.
 export function PBDisclaimer({ compact = false }: { compact?: boolean }) {
   if (compact) {
     return (
       <span
-        className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[10px] tracking-[0.04em]"
-        style={{ borderColor: "var(--line)", color: "var(--muted)" }}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "5px 10px",
+          borderRadius: 999,
+          border: "1px solid var(--line)",
+          background: "var(--surface)",
+          fontFamily: "var(--font-sans)",
+          fontSize: 11,
+          fontWeight: 500,
+          color: "var(--muted)",
+          whiteSpace: "nowrap",
+        }}
       >
-        <span className="h-[5px] w-[5px] rounded-full" style={{ background: "var(--seal)" }} />
+        <span style={{ width: 5, height: 5, borderRadius: 999, background: "var(--seal)", flex: "0 0 auto" }} />
         忠实翻译 · 非投资建议
       </span>
     );
   }
   return (
-    <span className="font-mono text-[11px] tracking-[0.02em]" style={{ color: "var(--muted)" }}>
-      忠实翻译 · 二手观点 · 永远链接原文 · 非投资建议
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--muted)" }}>
+      <span style={{ width: 6, height: 6, borderRadius: 999, background: "var(--seal)", flex: "0 0 auto" }} />
+      所有内容均为二手观点并链接原文 · 忠实翻译 + 摘要 · 不构成投资建议
     </span>
   );
 }

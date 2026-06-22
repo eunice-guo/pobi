@@ -1,8 +1,10 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import type { Channel, Feed } from "@/lib/types";
 import { dayLabel, fullDateLabel } from "@/lib/date";
 import { PBBrand, PBAvatar, PBPlatform, PBDisclaimer } from "./pb";
+import { pobiBurst, pobiCelebrate } from "@/lib/confetti";
 import {
   CHANNEL_META,
   CHANNEL_ORDER,
@@ -12,13 +14,17 @@ import {
   type Folder,
   toVM,
   type TriageVM,
+  sourceKeyOf,
+  DISABLED_SOURCES_KEY,
+  RENAMES_KEY,
 } from "@/lib/triage";
 
 const READ_KEY = "pobi.readIds";
 const STAR_KEY = "pobi.starredIds";
 const SAVE_KEY = "pobi.savedIds";
+const DISMISS_KEY = "pobi.dismissedIds";
 const SEEN_KEY = "pobi.lastSeenAt";
-const PAPER_SEED_KEY = "pobi.papersSeeded"; // one-time: papers → 待读清单
+const PAPER_SEED_KEY = "pobi.papersSeeded";
 
 function loadSet(key: string): Set<string> {
   try {
@@ -33,229 +39,294 @@ function saveSet(key: string, s: Set<string>) {
     localStorage.setItem(key, JSON.stringify([...s]));
   } catch {}
 }
-
-// ── small star glyph ───────────────────────────────────────────────────────
-function Star({ filled, size = 12 }: { filled?: boolean; size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden
-      fill={filled ? "var(--seal)" : "none"} stroke={filled ? "var(--seal)" : "currentColor"} strokeWidth={1.6}>
-      <path d="M12 2.5l2.9 5.9 6.5.95-4.7 4.58 1.1 6.47L12 17.9 6.2 20.9l1.1-6.47L2.6 9.85l6.5-.95z" strokeLinejoin="round" />
-    </svg>
-  );
+function loadMap(key: string): Record<string, string> {
+  try {
+    const r = localStorage.getItem(key);
+    return r ? (JSON.parse(r) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
 }
 
-// ── pill action button (reading pane) ──────────────────────────────────────
-function PaneAct({ on, onClick, children }: { on?: boolean; onClick?: () => void; children: React.ReactNode }) {
+// ── icons ──────────────────────────────────────────────────────────────────
+const StarIcon = ({ filled, size = 13 }: { filled?: boolean; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 14 14" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.3} aria-hidden>
+    <path d="M7 1l1.8 3.7 4 .6-2.9 2.8.7 4L7 10.9 3.4 12.1l.7-4L1.2 5.3l4-.6z" strokeLinejoin="round" />
+  </svg>
+);
+const SaveIcon = ({ filled }: { filled?: boolean }) => (
+  <svg width="12" height="12" viewBox="0 0 14 14" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.3} aria-hidden>
+    <path d="M3.5 2h7v10l-3.5-2.3L3.5 12z" strokeLinejoin="round" />
+  </svg>
+);
+const StarSolid = ({ size = 12 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 14 14" fill="var(--seal)" style={{ flex: "0 0 auto" }} aria-hidden>
+    <path d="M7 1l1.8 3.7 4 .6-2.9 2.8.7 4L7 10.9 3.4 12.1l.7-4L1.2 5.3l4-.6z" />
+  </svg>
+);
+
+// ── reading-pane pill (desktop) ──────────────────────────────────────────────
+function PaneAct({ on, onClick, title, children }: { on?: boolean; onClick?: () => void; title?: string; children: React.ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="rounded-lg border px-3 py-1.5 font-mono text-[11px] tracking-[0.02em] transition-colors"
-      style={
-        on
-          ? { color: "var(--seal)", background: "var(--seal-wash)", borderColor: "var(--seal-line)" }
-          : { color: "var(--ink-soft)", borderColor: "var(--line)" }
-      }
+      title={title}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "7px 12px",
+        borderRadius: 8,
+        cursor: "pointer",
+        border: "1px solid " + (on ? "color-mix(in oklch, var(--seal) 40%, transparent)" : "var(--line)"),
+        background: on ? "color-mix(in oklch, var(--seal) 8%, transparent)" : "var(--surface)",
+        color: on ? "var(--seal)" : "var(--ink-soft)",
+        fontFamily: "var(--font-sans)",
+        fontSize: 12.5,
+        fontWeight: 500,
+      }}
     >
       {children}
     </button>
   );
 }
 
-// ── one list row (desktop + mobile) ────────────────────────────────────────
+// ── list row ─────────────────────────────────────────────────────────────────
 function ItemRow({
   vm,
+  cn,
   active,
-  unread,
-  starred,
-  onOpen,
+  isRead,
+  isStarred,
+  isTriage,
+  hov,
   mobile = false,
+  onOpen,
+  onHover,
+  onConfirm,
 }: {
   vm: TriageVM;
+  cn: string;
   active: boolean;
-  unread: boolean;
-  starred: boolean;
-  onOpen: () => void;
+  isRead: boolean;
+  isStarred: boolean;
+  isTriage: boolean;
+  hov: boolean;
   mobile?: boolean;
+  onOpen: () => void;
+  onHover?: (v: boolean) => void;
+  onConfirm?: (e: React.MouseEvent) => void;
 }) {
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onOpen}
-      className="relative flex w-full flex-col gap-1.5 px-5 py-3.5 text-left transition-colors"
+      onMouseEnter={onHover ? () => onHover(true) : undefined}
+      onMouseLeave={onHover ? () => onHover(false) : undefined}
       style={{
+        display: "flex",
+        gap: mobile ? 12 : 11,
+        padding: mobile ? "15px 20px" : "13px 20px",
+        cursor: "pointer",
+        position: "relative",
         borderBottom: "1px solid var(--line)",
-        background: active ? "var(--wash)" : "transparent",
+        background: active ? "var(--wash)" : hov ? "color-mix(in oklch, var(--wash) 45%, transparent)" : "transparent",
       }}
     >
-      {active && (
-        <span className="absolute left-0 top-0 h-full" style={{ width: 2.5, background: "var(--seal)" }} />
-      )}
-      <div className="flex items-center gap-2">
+      {active && <span style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 2.5, background: "var(--seal)" }} />}
+      <div style={{ paddingTop: mobile ? 5 : 4, flex: "0 0 auto" }}>
         <span
-          className="shrink-0 rounded-full"
           style={{
             width: 7,
             height: 7,
-            background: unread ? "var(--seal)" : "transparent",
-            border: unread ? "none" : "1px solid var(--line-strong)",
+            borderRadius: 999,
+            display: "block",
+            background: isRead ? "transparent" : "var(--seal)",
+            boxShadow: isRead ? "inset 0 0 0 1px var(--line-strong)" : "none",
           }}
         />
-        <PBAvatar initials={vm.initials} tint={vm.tint} size={18} />
-        <span className="truncate font-sans text-[12.5px] font-semibold" style={{ color: "var(--ink-soft)" }}>
-          {vm.cn}
-        </span>
-        <PBPlatform name={vm.platform} seal={vm.platformSeal} />
-        <span className="ml-auto shrink-0 font-mono text-[10.5px]" style={{ color: "var(--faint)" }}>
-          {dayLabel(vm.item.publishedAt)}
-        </span>
-        {starred && <Star filled size={12} />}
       </div>
-      <div
-        className="font-serif leading-snug"
-        style={{ fontSize: mobile ? 16 : 15, fontWeight: unread ? 600 : 500, color: "var(--ink)" }}
-      >
-        {vm.titleCn}
-      </div>
-      {vm.summaryCn && (
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: mobile ? 6 : 5 }}>
+          <PBAvatar initials={vm.initials} tint={vm.tint} size={18} />
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink-soft)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>
+            {cn}
+          </span>
+          <PBPlatform name={vm.platform} />
+          <span style={{ flex: 1 }} />
+          {!mobile && hov && isTriage && onConfirm ? (
+            <button
+              type="button"
+              onClick={onConfirm}
+              title="确认读完 (E)"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                border: "1px solid color-mix(in oklch, var(--seal) 35%, transparent)",
+                background: "color-mix(in oklch, var(--seal) 8%, transparent)",
+                color: "var(--seal)",
+                borderRadius: 999,
+                padding: "2px 8px",
+                cursor: "pointer",
+                fontFamily: "var(--font-sans)",
+                fontSize: 10.5,
+                fontWeight: 600,
+                flex: "0 0 auto",
+              }}
+            >
+              ✓ 读完
+            </button>
+          ) : (
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--faint)", flex: "0 0 auto" }}>{dayLabel(vm.item.publishedAt)}</span>
+          )}
+        </div>
         <div
-          className="overflow-hidden text-[12px] leading-relaxed"
           style={{
+            fontFamily: "var(--font-serif)",
+            fontSize: mobile ? 16 : 15,
+            lineHeight: mobile ? 1.42 : 1.4,
+            color: isRead && !mobile ? "var(--muted)" : "var(--ink)",
+            fontWeight: isRead ? 500 : 600,
+            marginBottom: mobile ? 5 : 4,
+          }}
+        >
+          {vm.titleCn}
+        </div>
+        <div
+          style={{
+            fontSize: mobile ? 12.5 : 12,
+            lineHeight: mobile ? 1.55 : 1.5,
             color: "var(--muted)",
             display: "-webkit-box",
-            WebkitLineClamp: mobile ? 2 : 1,
+            WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
+            overflow: "hidden",
           }}
         >
           {vm.summaryCn}
         </div>
+      </div>
+      {isStarred && (
+        <span style={{ flex: "0 0 auto", marginTop: mobile ? 4 : 3 }}>
+          <StarSolid />
+        </span>
       )}
-    </button>
+    </div>
   );
 }
 
-// ── reading article body (shared) ──────────────────────────────────────────
+// ── reading article body (shared desktop + mobile) ───────────────────────────
 function ReaderArticle({
   vm,
-  showEnglish,
-  onToggleEnglish,
+  cn,
+  showEn,
   mobile = false,
+  onToggleEn,
 }: {
   vm: TriageVM;
-  showEnglish: boolean;
-  onToggleEnglish: () => void;
+  cn: string;
+  showEn: boolean;
   mobile?: boolean;
+  onToggleEn?: () => void;
 }) {
-  const showEn = showEnglish || !vm.bodyCn; // link-style items default to original
+  const effShowEn = showEn || !vm.bodyCn;
+  const catLabel = vm.item.sectors[0] ? SECTOR_LABEL[vm.item.sectors[0]] ?? vm.item.sectors[0] : null;
+  const meta = [vm.platform, catLabel, fullDateLabel(vm.item.publishedAt), `约 ${vm.readMins} 分钟`].filter(Boolean).join(" · ");
   return (
-    <article className="mx-auto w-full" style={{ maxWidth: mobile ? "none" : 620 }}>
-      {/* source header */}
-      <div className="flex items-center gap-3">
+    <div style={{ maxWidth: mobile ? "none" : 620 }}>
+      <header style={{ display: "flex", alignItems: "center", gap: mobile ? 11 : 12, marginBottom: mobile ? 18 : 22 }}>
         <PBAvatar initials={vm.initials} tint={vm.tint} size={mobile ? 40 : 42} />
-        <div className="min-w-0">
-          <div className="font-sans text-[16px] font-semibold leading-tight" style={{ color: "var(--ink)" }}>
-            {vm.cn}
-          </div>
-          <div className="mt-0.5 truncate font-mono text-[11px]" style={{ color: "var(--faint)" }}>
-            {vm.en}
-          </div>
+        <div style={{ minWidth: 0 }}>
+          {mobile ? (
+            <>
+              <div style={{ fontWeight: 600, fontSize: 15 }}>{cn}</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--faint)", marginTop: 2 }}>{vm.en}</div>
+            </>
+          ) : (
+            <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <span style={{ fontWeight: 600, fontSize: 16 }}>{cn}</span>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--faint)" }}>{vm.en}</span>
+            </div>
+          )}
+          {!mobile && <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 3 }}>{meta}</div>}
         </div>
-      </div>
+      </header>
 
-      <div className="mt-3 font-mono text-[11px] tracking-[0.02em]" style={{ color: "var(--faint)" }}>
-        {vm.platform} · {fullDateLabel(vm.item.publishedAt)} · 约 {vm.readMins} 分钟
-      </div>
-
-      {/* 摘要 */}
       {vm.summaryCn && (
-        <div className="mt-5 rounded-[10px] px-4 py-3.5" style={{ background: "var(--wash)" }}>
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: "var(--seal)" }}>
+        <div style={{ display: "flex", gap: mobile ? 10 : 12, padding: mobile ? "13px 15px" : "14px 16px", borderRadius: mobile ? 11 : 10, background: "var(--wash)", marginBottom: mobile ? 20 : 24 }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: mobile ? 9.5 : 10, letterSpacing: "0.12em", color: "var(--seal)", textTransform: "uppercase", flex: "0 0 auto", paddingTop: mobile ? 3 : 2 }}>
             摘要
-          </div>
-          <p className="mt-1.5 text-[13.5px] leading-[1.6]" style={{ color: "var(--ink-soft)" }}>
-            {vm.summaryCn}
-          </p>
+          </span>
+          <span style={{ fontSize: mobile ? 13 : 13.5, lineHeight: 1.6, color: "var(--ink-soft)" }}>{vm.summaryCn}</span>
         </div>
       )}
 
-      {/* title */}
-      <h1
-        className="font-serif mt-6 font-semibold"
-        style={{ fontSize: mobile ? 23 : 27, lineHeight: mobile ? 1.36 : 1.34, color: "var(--ink)" }}
-      >
+      <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: mobile ? 23 : 27, lineHeight: mobile ? 1.36 : 1.34, margin: mobile ? "0 0 8px" : "0 0 18px", letterSpacing: "0.005em", color: "var(--ink)" }}>
         {vm.titleCn}
       </h1>
 
-      {/* tickers / sectors — quiet investor signal */}
-      {(vm.tickers.length > 0 || vm.item.sectors.length > 0) && (
-        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+      {mobile && <div style={{ fontSize: 11.5, color: "var(--muted)", marginBottom: 18, fontFamily: "var(--font-mono)" }}>{meta}</div>}
+
+      {/* quiet investor signal — tickers when present */}
+      {vm.tickers.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: mobile ? "0 0 16px" : "-6px 0 18px" }}>
           {vm.tickers.map((t) => (
-            <span
-              key={t}
-              className="rounded px-1.5 py-0.5 font-mono text-[10.5px] font-medium"
-              style={{ color: "var(--seal)", border: "1px solid var(--seal-line)" }}
-            >
+            <span key={t} style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, fontWeight: 500, color: "var(--seal)", border: "1px solid color-mix(in oklch, var(--seal) 40%, transparent)", borderRadius: 4, padding: "1px 6px" }}>
               ${t}
             </span>
           ))}
-          {vm.tickers.length === 0 &&
-            vm.item.sectors.map((s) => (
-              <span
-                key={s}
-                className="rounded px-1.5 py-0.5 text-[10.5px]"
-                style={{ color: "var(--muted)", border: "1px solid var(--line)" }}
-              >
-                {SECTOR_LABEL[s] ?? s}
-              </span>
-            ))}
         </div>
       )}
 
-      {/* body — faithful Chinese translation, when available */}
       {vm.bodyCn ? (
-        <div
-          className="reading-serif mt-6 whitespace-pre-wrap"
-          style={{ fontSize: 16.5, lineHeight: 1.85, color: "var(--ink-soft)" }}
-        >
+        <p style={{ fontFamily: "var(--font-serif)", fontSize: 16.5, lineHeight: 1.85, color: "var(--ink-soft)", margin: 0, whiteSpace: "pre-wrap", textWrap: "pretty" }}>
           {vm.bodyCn}
-        </div>
+        </p>
       ) : (
-        <p className="mt-6 text-[14px] leading-relaxed" style={{ color: "var(--muted)" }}>
-          本条为链接型条目（{vm.platform}）——下面是英文原文要点，完整内容请前往来源阅读。
+        <p style={{ fontSize: 14, lineHeight: 1.7, color: "var(--muted)", margin: 0 }}>
+          本条为链接型条目（{vm.platform}）—— 下面是英文原文要点，完整内容请前往来源阅读。
         </p>
       )}
 
-      {/* mobile inline toggle */}
-      {mobile && vm.bodyCn && (
+      {/* mobile inline toggle sits between body and the EN original (matches reference order) */}
+      {mobile && onToggleEn && vm.bodyCn && (
         <button
           type="button"
-          onClick={onToggleEnglish}
-          className="mt-6 rounded-lg border px-3 py-1.5 font-mono text-[11px]"
-          style={
-            showEnglish
-              ? { color: "var(--seal)", background: "var(--seal-wash)", borderColor: "var(--seal-line)" }
-              : { color: "var(--ink-soft)", borderColor: "var(--line)" }
-          }
+          onClick={onToggleEn}
+          style={{
+            marginTop: 20,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            border: "1px solid var(--line)",
+            background: "var(--surface)",
+            borderRadius: 999,
+            padding: "7px 13px",
+            cursor: "pointer",
+            fontFamily: "var(--font-sans)",
+            fontSize: 12.5,
+            fontWeight: 600,
+            color: showEn ? "var(--seal)" : "var(--ink-soft)",
+          }}
         >
-          对照原文 EN
+          {showEn ? "隐藏原文" : "对照原文 EN"}
         </button>
       )}
 
-      {/* English original */}
-      {showEn && vm.bodyEn && (
-        <div className="mt-6 border-t pt-5" style={{ borderColor: "var(--line)" }}>
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: "var(--faint)" }}>
-            Original · 原文（{vm.platform}）
+      {effShowEn && vm.bodyEn && (
+        <div style={{ marginTop: mobile ? 16 : 22, paddingTop: mobile ? 18 : 22, borderTop: "1px solid var(--line)" }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: mobile ? 9.5 : 10, letterSpacing: "0.14em", color: "var(--faint)", textTransform: "uppercase", marginBottom: mobile ? 10 : 12 }}>
+            {mobile ? "Original · 原文" : `Original · 原文（${vm.platform}）`}
           </div>
-          <div
-            className="reading-serif mt-3 whitespace-pre-wrap italic"
-            style={{ fontSize: 15, lineHeight: 1.75, color: "var(--muted)" }}
-          >
+          <p style={{ fontFamily: "var(--font-serif)", fontSize: mobile ? 14.5 : 15, lineHeight: 1.75, color: "var(--muted)", margin: 0, fontStyle: "italic", whiteSpace: "pre-wrap" }}>
             {vm.bodyEn}
-          </div>
+          </p>
         </div>
       )}
-    </article>
+    </div>
   );
 }
 
@@ -263,127 +334,185 @@ export default function Triage() {
   const [feed, setFeed] = useState<Feed | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [sel, setSel] = useState<string | null>(null);
   const [folder, setFolder] = useState<Folder>("today");
-  const [channel, setChannel] = useState<Channel | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [cat, setCat] = useState<Channel | null>(null);
+  const [showEn, setShowEn] = useState(false);
+  const [hover, setHover] = useState<string | null>(null);
+  const [doneCount, setDoneCount] = useState(0);
   const [mobileView, setMobileView] = useState<"list" | "read">("list");
-  const [showEnglish, setShowEnglish] = useState(false);
 
-  const [readIds, setReadIds] = useState<Set<string>>(new Set());
-  const [starredIds, setStarredIds] = useState<Set<string>>(new Set());
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-  const [lastSeen, setLastSeen] = useState(0);
+  const [read, setRead] = useState<Set<string>>(new Set());
+  const [star, setStar] = useState<Set<string>>(new Set());
+  const [save, setSave] = useState<Set<string>>(new Set());
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  const [disabledSources, setDisabledSources] = useState<Set<string>>(new Set());
+  const [renames, setRenames] = useState<Record<string, string>>({});
+
+  const rootRef = useRef<HTMLDivElement>(null);
+  const mobileRootRef = useRef<HTMLDivElement>(null);
+  const paneRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/feed/latest.json")
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then((f: Feed) => {
         setFeed(f);
-        // one-time: drop the curated 论文 reading list into 待读清单 ("to read")
         try {
           if (!localStorage.getItem(PAPER_SEED_KEY)) {
             const saved = loadSet(SAVE_KEY);
             for (const it of f.items) if (it.channel === "paper") saved.add(it.id);
             saveSet(SAVE_KEY, saved);
-            setSavedIds(saved);
+            setSave(saved);
             localStorage.setItem(PAPER_SEED_KEY, "1");
           }
         } catch {}
       })
       .catch((e) => setError(String(e)));
 
-    setReadIds(loadSet(READ_KEY));
-    setStarredIds(loadSet(STAR_KEY));
-    setSavedIds((prev) => {
+    setRead(loadSet(READ_KEY));
+    setStar(loadSet(STAR_KEY));
+    setSave((p) => {
       const s = loadSet(SAVE_KEY);
-      return s.size ? s : prev;
+      return s.size ? s : p;
     });
+    setDismissed(loadSet(DISMISS_KEY));
+    setDisabledSources(loadSet(DISABLED_SOURCES_KEY));
+    setRenames(loadMap(RENAMES_KEY));
     try {
-      setLastSeen(Number(localStorage.getItem(SEEN_KEY) || 0));
+      localStorage.setItem(SEEN_KEY, String(Date.now()));
     } catch {}
   }, []);
 
+  const allVms = useMemo<TriageVM[]>(() => (feed?.items ?? []).map(toVM), [feed]);
+  const vms = useMemo(() => allVms.filter((v) => !disabledSources.has(sourceKeyOf(v.item))), [allVms, disabledSources]);
+  const displayCn = useCallback((vm: TriageVM) => renames[sourceKeyOf(vm.item)] ?? vm.cn, [renames]);
+
+  const isTriage = folder === "today" || folder === "unread";
+
+  const visibleFor = useCallback(
+    (f: Folder, c: Channel | null, dis: Set<string>) => {
+      let arr = vms.filter((v) => {
+        if (f === "today") return !dis.has(v.id);
+        if (f === "unread") return !read.has(v.id) && !dis.has(v.id);
+        if (f === "starred") return star.has(v.id);
+        if (f === "reading") return save.has(v.id);
+        return true;
+      });
+      if (c) arr = arr.filter((v) => v.channel === c);
+      return arr;
+    },
+    [vms, read, star, save]
+  );
+  const visible = useMemo(() => visibleFor(folder, cat, dismissed), [visibleFor, folder, cat, dismissed]);
+
+  // keep a valid selection within the current view (drives the desktop pane)
   useEffect(() => {
-    if (feed) {
-      try {
-        localStorage.setItem(SEEN_KEY, String(Date.now()));
-      } catch {}
+    if (!visible.length) {
+      if (sel !== null) setSel(null);
+      return;
     }
-  }, [feed]);
+    if (!visible.some((v) => v.id === sel)) setSel(visible[0].id);
+  }, [folder, cat, visible, sel]);
 
-  const vms = useMemo<TriageVM[]>(() => (feed?.items ?? []).map(toVM), [feed]);
+  useEffect(() => {
+    if (paneRef.current) paneRef.current.scrollTop = 0;
+  }, [sel]);
 
-  const markRead = (id: string) => {
-    setReadIds((prev) => {
-      if (prev.has(id)) return prev;
-      const next = new Set(prev).add(id);
-      saveSet(READ_KEY, next);
-      return next;
+  const item = useMemo(() => (sel ? vms.find((v) => v.id === sel) ?? null : null), [vms, sel]);
+
+  const markRead = useCallback((id: string) => {
+    setRead((r) => {
+      if (r.has(id)) return r;
+      const n = new Set(r).add(id);
+      saveSet(READ_KEY, n);
+      return n;
     });
-  };
-  const toggleStar = (id: string) =>
-    setStarredIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      saveSet(STAR_KEY, next);
-      return next;
+  }, []);
+
+  const tog = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, key: string) => (id: string) =>
+    setter((x) => {
+      const n = new Set(x);
+      n.has(id) ? n.delete(id) : n.add(id);
+      saveSet(key, n);
+      return n;
     });
-  const toggleSave = (id: string) =>
-    setSavedIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      saveSet(SAVE_KEY, next);
-      return next;
-    });
+  const togStar = tog(setStar, STAR_KEY);
+  const togSave = tog(setSave, SAVE_KEY);
 
-  const openItem = (id: string) => {
-    setSelectedId(id);
-    setShowEnglish(false);
-    setMobileView("read");
-    markRead(id);
-  };
-
-  // folder filter (read-state lanes)
-  const folderItems = useMemo(() => {
-    switch (folder) {
-      case "unread":
-        return vms.filter((v) => !readIds.has(v.id));
-      case "starred":
-        return vms.filter((v) => starredIds.has(v.id));
-      case "reading":
-        return vms.filter((v) => savedIds.has(v.id));
-      default:
-        return vms;
-    }
-  }, [vms, folder, readIds, starredIds, savedIds]);
-
-  // channel (分类) filter within the folder
-  const visible = useMemo(
-    () => (channel ? folderItems.filter((v) => v.channel === channel) : folderItems),
-    [folderItems, channel]
+  // Desktop: showEn is sticky across selections (matches reference open()).
+  const open = useCallback(
+    (id: string) => {
+      setSel(id);
+      markRead(id);
+    },
+    [markRead]
   );
 
-  const folderCounts = useMemo(
-    () => ({
-      today: vms.length,
-      unread: vms.filter((v) => !readIds.has(v.id)).length,
-      starred: vms.filter((v) => starredIds.has(v.id)).length,
-      reading: vms.filter((v) => savedIds.has(v.id)).length,
-    }),
-    [vms, readIds, starredIds, savedIds]
+  // 确认读完 (markDone=true) / 移除 (false): drop from triage view, auto-advance, 撒花.
+  const dismiss = useCallback(
+    (id: string, markDone: boolean, host: HTMLElement | null) => {
+      const remaining = visible.filter((v) => v.id !== id);
+      if (id === sel) {
+        const idx = visible.findIndex((v) => v.id === id);
+        const next = remaining[idx] || remaining[idx - 1] || remaining[0] || null;
+        setSel(next ? next.id : null);
+      }
+      setDismissed((d) => {
+        const n = new Set(d).add(id);
+        saveSet(DISMISS_KEY, n);
+        return n;
+      });
+      if (markDone) {
+        markRead(id);
+        setDoneCount((n) => n + 1);
+      }
+      if (isTriage && remaining.length === 0) requestAnimationFrame(() => pobiCelebrate(host));
+      else pobiBurst(host, { originX: 0.78, originY: 0.12, count: 30, power: 10 });
+    },
+    [visible, sel, isTriage, markRead]
   );
 
-  const channelCounts = useMemo(() => {
-    const c: Record<string, number> = {};
-    for (const v of folderItems) c[v.channel] = (c[v.channel] || 0) + 1;
-    return c;
-  }, [folderItems]);
+  // keyboard triage (desktop): j/k move · e 确认读完 · s 加星 · x 移除
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const t = e.target as HTMLElement;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+      const idx = visible.findIndex((v) => v.id === sel);
+      if (e.key === "j") {
+        e.preventDefault();
+        const n = visible[Math.min(idx + 1, visible.length - 1)];
+        if (n) open(n.id);
+      } else if (e.key === "k") {
+        e.preventDefault();
+        const n = visible[Math.max(idx - 1, 0)];
+        if (n) open(n.id);
+      } else if (e.key === "e" && item) {
+        e.preventDefault();
+        dismiss(item.id, true, rootRef.current);
+      } else if (e.key === "x" && item && isTriage) {
+        e.preventDefault();
+        dismiss(item.id, false, rootRef.current);
+      } else if (e.key === "s" && item) {
+        e.preventDefault();
+        togStar(item.id);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
 
-  const newCount = useMemo(() => visible.filter((v) => !readIds.has(v.id)).length, [visible, readIds]);
-  const sourceCount = useMemo(() => new Set(visible.map((v) => v.cn)).size, [visible]);
+  // counts
+  const todayCount = useMemo(() => visibleFor("today", null, dismissed).length, [visibleFor, dismissed]);
+  const unreadCount = useMemo(() => vms.filter((v) => !read.has(v.id) && !dismissed.has(v.id)).length, [vms, read, dismissed]);
+  const starCount = useMemo(() => vms.filter((v) => star.has(v.id)).length, [vms, star]);
+  const saveCount = useMemo(() => vms.filter((v) => save.has(v.id)).length, [vms, save]);
+  const folderCount: Record<Folder, number> = { today: todayCount, unread: unreadCount, starred: starCount, reading: saveCount };
 
-  const selected = useMemo(() => vms.find((v) => v.id === selectedId) ?? null, [vms, selectedId]);
+  const sourceCount = useMemo(() => new Set(visible.map((v) => displayCn(v))).size, [visible, displayCn]);
   const activeFolder = FOLDERS.find((f) => f.key === folder)!;
+  const feedWeekday = feed ? new Date(feed.date + "T12:00:00").toLocaleDateString("zh-CN", { weekday: "long" }) : "";
+  const feedDate = feed ? new Date(feed.date + "T12:00:00").toLocaleDateString("zh-CN", { month: "long", day: "numeric" }) : "";
 
   if (error)
     return (
@@ -404,236 +533,262 @@ export default function Triage() {
       </div>
     );
 
-  const feedWeekday = new Date(feed.date + "T12:00:00").toLocaleDateString("zh-CN", { weekday: "long" });
-  const feedDate = new Date(feed.date + "T12:00:00").toLocaleDateString("zh-CN", { month: "long", day: "numeric" });
-
   return (
-    <div className="flex h-[100dvh] overflow-hidden" style={{ background: "var(--paper)", color: "var(--ink)" }}>
-      {/* ══ DESKTOP: rail ══ */}
-      <aside
-        className="hidden shrink-0 flex-col gap-[18px] lg:flex"
-        style={{ width: 212, borderRight: "1px solid var(--line)", padding: "22px 14px" }}
-      >
-        <PBBrand size={28} />
-
-        <nav className="flex flex-col gap-0.5">
-          {FOLDERS.map((f) => {
-            const on = folder === f.key;
-            return (
-              <button
-                key={f.key}
-                type="button"
-                onClick={() => {
-                  setFolder(f.key);
-                  setChannel(null);
-                }}
-                className="flex items-center justify-between rounded-[7px] px-2.5 py-[7px] text-left transition-colors"
-                style={
-                  on
-                    ? { background: "var(--surface)", boxShadow: "inset 0 0 0 1px var(--line)" }
-                    : undefined
-                }
-              >
-                <span className="text-[13px]" style={{ color: "var(--ink)", fontWeight: on ? 600 : 400 }}>
-                  {f.cn}
-                </span>
-                <span
-                  className="font-mono text-[11px]"
-                  style={{ color: f.key === "unread" ? "var(--seal)" : "var(--faint)" }}
-                >
-                  {folderCounts[f.key]}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="mt-1 flex flex-col gap-0.5">
-          <div className="px-2.5 pb-1.5 font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: "var(--faint)" }}>
-            分类 Channels
+    <>
+      {/* ══════════ DESKTOP ══════════ */}
+      <div ref={rootRef} tabIndex={0} className="hidden lg:flex" style={{ width: "100%", height: "100dvh", background: "var(--paper)", color: "var(--ink)", fontFamily: "var(--font-sans)", outline: "none" }}>
+        {/* rail */}
+        <aside style={{ width: 212, flex: "0 0 auto", borderRight: "1px solid var(--line)", padding: "22px 14px", display: "flex", flexDirection: "column", gap: 18 }}>
+          <div style={{ paddingLeft: 6 }}>
+            <PBBrand size={28} />
           </div>
-          <button
-            type="button"
-            onClick={() => setChannel(null)}
-            className="flex items-center justify-between rounded-[7px] px-2.5 py-[6px] text-left"
-            style={channel === null ? { background: "var(--surface)", boxShadow: "inset 0 0 0 1px var(--line)" } : undefined}
-          >
-            <span className="text-[12.5px]" style={{ color: "var(--ink-soft)", fontWeight: channel === null ? 600 : 400 }}>
-              全部
-            </span>
-            <span className="font-mono text-[10.5px]" style={{ color: "var(--faint)" }}>
-              {folderItems.length}
-            </span>
-          </button>
-          {CHANNEL_ORDER.map((ch) => {
-            const on = channel === ch;
-            const n = channelCounts[ch] || 0;
-            return (
-              <button
-                key={ch}
-                type="button"
-                onClick={() => setChannel(ch)}
-                className="flex items-center justify-between rounded-[7px] px-2.5 py-[6px] text-left transition-colors"
-                style={on ? { background: "var(--surface)", boxShadow: "inset 0 0 0 1px var(--line)" } : undefined}
-              >
-                <span className="flex items-baseline gap-1.5 truncate">
-                  <span
-                    className="text-[12.5px]"
-                    style={{ color: CHANNEL_META[ch].seal ? "var(--seal)" : "var(--ink-soft)", fontWeight: on ? 600 : 400 }}
-                  >
-                    {CHANNEL_META[ch].label}
-                  </span>
-                  <span className="font-mono text-[9px] uppercase tracking-wide" style={{ color: "var(--faint)" }}>
-                    {CHANNEL_EN[ch]}
-                  </span>
-                </span>
-                <span className="font-mono text-[10.5px]" style={{ color: "var(--faint)" }}>
-                  {n}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="mt-auto">
-          <PBDisclaimer compact />
-        </div>
-      </aside>
-
-      {/* ══ DESKTOP: list ══ */}
-      <section
-        className="hidden shrink-0 flex-col lg:flex"
-        style={{ width: 372, borderRight: "1px solid var(--line)" }}
-      >
-        <header
-          className="flex shrink-0 items-end justify-between px-5"
-          style={{ height: 70, borderBottom: "1px solid var(--line)" }}
-        >
+          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {FOLDERS.map((f) => {
+              const active = folder === f.key;
+              const accent = f.key === "unread";
+              return (
+                <button
+                  key={f.key}
+                  type="button"
+                  onClick={() => {
+                    setFolder(f.key);
+                    setCat(null);
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "7px 10px",
+                    borderRadius: 7,
+                    cursor: "pointer",
+                    width: "100%",
+                    border: "none",
+                    textAlign: "left",
+                    fontFamily: "var(--font-sans)",
+                    background: active ? "var(--surface)" : "transparent",
+                    boxShadow: active ? "inset 0 0 0 1px var(--line)" : "none",
+                    color: active ? "var(--ink)" : "var(--ink-soft)",
+                    fontWeight: active ? 600 : 500,
+                    fontSize: 13.5,
+                  }}
+                >
+                  <span>{f.cn}</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--faint)" }}>{f.en}</span>
+                  <span style={{ flex: 1 }} />
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: accent && folderCount[f.key] ? "var(--seal)" : "var(--faint)" }}>{folderCount[f.key]}</span>
+                </button>
+              );
+            })}
+          </div>
           <div>
-            <div className="font-serif text-[18px] font-semibold" style={{ color: "var(--ink)" }}>
-              {activeFolder.cn}
-            </div>
-            <div className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.1em]" style={{ color: "var(--faint)" }}>
-              {newCount} NEW · {sourceCount} SOURCES
-            </div>
-          </div>
-          <span className="pb-1 font-mono text-[10.5px]" style={{ color: "var(--faint)" }}>
-            最新 ↓
-          </span>
-        </header>
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          {visible.length === 0 ? (
-            <p className="p-8 text-center text-[13px]" style={{ color: "var(--faint)" }}>
-              该筛选下暂无内容。
-            </p>
-          ) : (
-            visible.map((vm) => (
-              <ItemRow
-                key={vm.id}
-                vm={vm}
-                active={vm.id === selectedId}
-                unread={!readIds.has(vm.id)}
-                starred={starredIds.has(vm.id)}
-                onOpen={() => openItem(vm.id)}
-              />
-            ))
-          )}
-        </div>
-      </section>
-
-      {/* ══ DESKTOP: reading pane ══ */}
-      <section className="hidden min-w-0 flex-1 flex-col lg:flex">
-        {selected ? (
-          <>
-            <div
-              className="flex shrink-0 items-center gap-2 px-8"
-              style={{ height: 70, borderBottom: "1px solid var(--line)" }}
-            >
-              <PaneAct on={starredIds.has(selected.id)} onClick={() => toggleStar(selected.id)}>
-                {starredIds.has(selected.id) ? "★ 已加星" : "加星"}
-              </PaneAct>
-              <PaneAct on={savedIds.has(selected.id)} onClick={() => toggleSave(selected.id)}>
-                {savedIds.has(selected.id) ? "✓ 待读" : "加入待读"}
-              </PaneAct>
-              <PaneAct on={showEnglish} onClick={() => setShowEnglish((v) => !v)}>
-                对照原文 EN
-              </PaneAct>
-              <a
-                href={selected.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ml-auto font-mono text-[11px] hover:underline"
-                style={{ color: "var(--seal)" }}
-              >
-                原文 ↗ {selected.domain}
-              </a>
-              {selected.altUrl && (
-                <a
-                  href={selected.altUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono text-[11px] hover:underline"
-                  style={{ color: "var(--seal)" }}
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.14em", color: "var(--faint)", textTransform: "uppercase", padding: "0 10px 6px" }}>分类</div>
+            {CHANNEL_ORDER.map((ch) => {
+              const on = cat === ch;
+              return (
+                <button
+                  key={ch}
+                  type="button"
+                  onClick={() => setCat(on ? null : ch)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "6px 10px",
+                    borderRadius: 7,
+                    cursor: "pointer",
+                    width: "100%",
+                    border: "none",
+                    textAlign: "left",
+                    background: on ? "var(--wash)" : "transparent",
+                    fontSize: 13,
+                    fontFamily: "var(--font-sans)",
+                    color: on ? "var(--ink)" : "var(--ink-soft)",
+                    fontWeight: on ? 600 : 400,
+                  }}
                 >
-                  {selected.altPlatform ?? "镜像"} ↗
+                  <span>{CHANNEL_META[ch].label}</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, color: "var(--faint)" }}>{CHANNEL_EN[ch]}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div style={{ flex: 1 }} />
+          <Link
+            href="/sources"
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 7, textDecoration: "none", color: "var(--ink-soft)", fontSize: 13, fontWeight: 500, border: "1px solid var(--line)" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
+              <circle cx="8" cy="5" r="2.4" />
+              <path d="M3 13c0-2.5 2.2-4 5-4s5 1.5 5 4" />
+            </svg>
+            来源管理
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, color: "var(--faint)", marginLeft: "auto" }}>Sources</span>
+          </Link>
+        </aside>
+
+        {/* list */}
+        <section style={{ width: 372, flex: "0 0 auto", borderRight: "1px solid var(--line)", display: "flex", flexDirection: "column", minWidth: 0 }}>
+          <div style={{ flex: "0 0 auto", height: 70, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", borderBottom: "1px solid var(--line)" }}>
+            <div>
+              <div style={{ fontFamily: "var(--font-serif)", fontSize: 18, fontWeight: 600 }}>
+                {activeFolder.cn}
+                {cat && <span style={{ color: "var(--muted)", fontWeight: 500 }}> · {CHANNEL_META[cat].label}</span>}
+              </div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--faint)", letterSpacing: "0.08em" }}>
+                {visible.length} 条 · {sourceCount} 来源
+              </div>
+            </div>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--muted)" }}>最新 ↓</span>
+          </div>
+          <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+            {visible.length === 0 ? (
+              <div style={{ padding: "48px 28px", textAlign: "center", color: "var(--muted)" }}>
+                <div style={{ fontFamily: "var(--font-serif)", fontSize: 16, color: "var(--ink-soft)", marginBottom: 6 }}>{isTriage ? "今日已清空 🎉" : "暂无内容"}</div>
+                <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>{isTriage ? "所有更新都已处理完毕。" : "换个文件夹或分类看看。"}</div>
+              </div>
+            ) : (
+              visible.map((vm) => (
+                <ItemRow
+                  key={vm.id}
+                  vm={vm}
+                  cn={displayCn(vm)}
+                  active={vm.id === sel}
+                  isRead={read.has(vm.id)}
+                  isStarred={star.has(vm.id)}
+                  isTriage={isTriage}
+                  hov={hover === vm.id}
+                  onOpen={() => open(vm.id)}
+                  onHover={(v) => setHover(v ? vm.id : hover === vm.id ? null : hover)}
+                  onConfirm={(e) => {
+                    e.stopPropagation();
+                    dismiss(vm.id, true, rootRef.current);
+                  }}
+                />
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* reading pane */}
+        <main style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          {item ? (
+            <>
+              <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 10, padding: "14px 32px", borderBottom: "1px solid var(--line)" }}>
+                <PaneAct on={star.has(item.id)} onClick={() => togStar(item.id)} title="加星 (S)">
+                  <StarIcon filled={star.has(item.id)} />
+                  加星
+                </PaneAct>
+                <PaneAct on={save.has(item.id)} onClick={() => togSave(item.id)}>
+                  <SaveIcon filled={save.has(item.id)} />
+                  {save.has(item.id) ? "已加入待读" : "加入待读"}
+                </PaneAct>
+                <PaneAct on={showEn} onClick={() => setShowEn((v) => !v)}>
+                  对照原文 EN
+                </PaneAct>
+                <span style={{ flex: 1 }} />
+                {isTriage && (
+                  <button
+                    type="button"
+                    onClick={() => dismiss(item.id, false, rootRef.current)}
+                    title="移除 (X)"
+                    style={{ border: "none", background: "none", cursor: "pointer", color: "var(--muted)", fontFamily: "var(--font-sans)", fontSize: 12.5, fontWeight: 500, padding: "7px 8px" }}
+                  >
+                    移除
+                  </button>
+                )}
+                {isTriage && (
+                  <button
+                    type="button"
+                    onClick={() => dismiss(item.id, true, rootRef.current)}
+                    title="确认读完 (E)"
+                    style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "none", cursor: "pointer", background: "var(--ink)", color: "var(--paper)", borderRadius: 8, padding: "8px 14px", fontFamily: "var(--font-sans)", fontSize: 12.5, fontWeight: 600 }}
+                  >
+                    ✓ 确认读完
+                  </button>
+                )}
+              </div>
+
+              <div ref={paneRef} style={{ flex: 1, minHeight: 0, overflow: "auto", padding: "30px 40px" }}>
+                <ReaderArticle vm={item} cn={displayCn(item)} showEn={showEn} />
+              </div>
+
+              <div style={{ flex: "0 0 auto", padding: "12px 32px", borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10 }}>
+                <PBDisclaimer />
+                <span style={{ flex: 1 }} />
+                {item.altUrl && (
+                  <a href={item.altUrl} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--seal)", fontWeight: 500, textDecoration: "none" }}>
+                    {item.altPlatform ?? "镜像"} ↗
+                  </a>
+                )}
+                <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--seal)", fontWeight: 500, textDecoration: "none" }}>
+                  原文 ↗ {item.domain}
                 </a>
+              </div>
+            </>
+          ) : (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 40 }}>
+              <div style={{ width: 64, height: 64, borderRadius: 18, background: "color-mix(in oklch, var(--seal) 10%, transparent)", color: "var(--seal)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 22 }}>
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+              </div>
+              <div style={{ fontFamily: "var(--font-serif)", fontSize: 26, fontWeight: 600, color: "var(--ink)", marginBottom: 8 }}>{isTriage ? "今日已清空" : "暂无内容"}</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.1em", color: "var(--faint)", textTransform: "uppercase", marginBottom: 18 }}>Inbox Zero</div>
+              <div style={{ fontSize: 14, lineHeight: 1.7, color: "var(--muted)", maxWidth: 320 }}>
+                {isTriage ? `今天的 ${doneCount} 篇更新都已处理完。明早 7 点会有新的内容到达。` : "换个文件夹或分类继续浏览。"}
+              </div>
+              {isTriage && doneCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDismissed(new Set());
+                    saveSet(DISMISS_KEY, new Set());
+                    setSel(vms[0]?.id ?? null);
+                  }}
+                  style={{ marginTop: 24, border: "1px solid var(--line)", background: "var(--surface)", borderRadius: 8, padding: "9px 16px", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 12.5, fontWeight: 600, color: "var(--ink-soft)" }}
+                >
+                  重新查看今日
+                </button>
               )}
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto" style={{ padding: "30px 40px" }}>
-              <ReaderArticle vm={selected} showEnglish={showEnglish} onToggleEnglish={() => setShowEnglish((v) => !v)} />
-            </div>
-            <div
-              className="flex shrink-0 items-center justify-between px-8 py-3"
-              style={{ borderTop: "1px solid var(--line)" }}
-            >
-              <PBDisclaimer />
-              <span className="font-mono text-[10.5px]" style={{ color: "var(--faint)" }}>
-                二手观点 · 仅供理解，自负风险
-              </span>
-            </div>
-          </>
-        ) : (
-          <div className="grid flex-1 place-items-center p-10 text-center">
-            <div>
-              <p className="font-serif text-[18px]" style={{ color: "var(--ink-soft)" }}>
-                选择左侧条目开始阅读
-              </p>
-              <p className="mt-2 font-mono text-[11px]" style={{ color: "var(--faint)" }}>
-                {activeFolder.cn} · {visible.length} 条
-              </p>
-            </div>
-          </div>
-        )}
-      </section>
+          )}
+        </main>
+      </div>
 
-      {/* ══ MOBILE ══ */}
-      <div className="flex min-w-0 flex-1 flex-col lg:hidden">
+      {/* ══════════ MOBILE ══════════ */}
+      <div ref={mobileRootRef} className="flex lg:hidden" style={{ height: "100dvh", flexDirection: "column", background: "var(--paper)", color: "var(--ink)", fontFamily: "var(--font-sans)" }}>
         {mobileView === "list" ? (
           <>
-            <header className="shrink-0 px-5 pt-[54px]">
-              <div className="flex items-center justify-between">
+            <div style={{ flex: "0 0 auto", padding: "54px 20px 0" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <PBBrand size={22} />
-                <span
-                  className="grid h-[34px] w-[34px] place-items-center rounded-full"
-                  style={{ border: "1px solid var(--line)", color: "var(--ink-soft)" }}
-                  aria-hidden
+                <span style={{ flex: 1 }} />
+                <Link
+                  href="/sources"
+                  aria-label="来源管理"
+                  style={{ width: 34, height: 34, borderRadius: 999, border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)", textDecoration: "none", flex: "0 0 auto" }}
                 >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="7" />
-                    <path d="M21 21l-4.3-4.3" />
+                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden>
+                    <circle cx="8" cy="5" r="2.4" />
+                    <path d="M3 13c0-2.5 2.2-4 5-4s5 1.5 5 4" />
                   </svg>
+                </Link>
+              </div>
+              <div style={{ marginTop: 18 }}>
+                <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: 30, margin: 0, letterSpacing: "0.01em" }}>{activeFolder.cn}</h1>
+              </div>
+              <div style={{ marginTop: 6, fontSize: 12.5, color: "var(--muted)", display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontFamily: "var(--font-mono)" }}>
+                  {feedDate} · {feedWeekday}
+                </span>
+                <span style={{ color: "var(--faint)" }}>·</span>
+                <span>
+                  {unreadCount} 条新内容 · {sourceCount} 来源
                 </span>
               </div>
-              <h1 className="font-serif mt-4 text-[30px] font-semibold" style={{ color: "var(--ink)" }}>
-                {activeFolder.cn}
-              </h1>
-              <div className="mt-1 font-mono text-[11px]" style={{ color: "var(--faint)" }}>
-                {feedDate} · {feedWeekday} · {newCount} 条新内容 · {sourceCount} 来源
-              </div>
-            </header>
+            </div>
 
-            {/* segmented filter (folders) */}
-            <div className="no-scrollbar mt-4 flex shrink-0 gap-2 overflow-x-auto px-5 pb-3">
+            <div className="no-scrollbar" style={{ flex: "0 0 auto", display: "flex", gap: 7, padding: "16px 20px 14px", overflowX: "auto" }}>
               {FOLDERS.map((f) => {
                 const on = folder === f.key;
                 return (
@@ -642,115 +797,127 @@ export default function Triage() {
                     type="button"
                     onClick={() => {
                       setFolder(f.key);
-                      setChannel(null);
+                      setCat(null);
                     }}
-                    className="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] transition-colors"
-                    style={
-                      on
-                        ? { background: "var(--ink)", color: "var(--paper)", fontWeight: 600 }
-                        : { border: "1px solid var(--line)", color: "var(--ink-soft)" }
-                    }
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "baseline",
+                      gap: 6,
+                      padding: "7px 13px",
+                      borderRadius: 999,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      border: "1px solid " + (on ? "var(--ink)" : "var(--line)"),
+                      background: on ? "var(--ink)" : "transparent",
+                      color: on ? "var(--paper)" : "var(--ink-soft)",
+                      fontFamily: "var(--font-sans)",
+                      fontSize: 13,
+                      fontWeight: on ? 600 : 500,
+                    }}
                   >
                     {f.cn}
-                    <span className="font-mono text-[10px]" style={{ opacity: 0.7 }}>
-                      {folderCounts[f.key]}
-                    </span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, opacity: on ? 0.85 : 0.55 }}>{folderCount[f.key]}</span>
                   </button>
                 );
               })}
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto" style={{ borderTop: "1px solid var(--line)" }}>
+            <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
               {visible.length === 0 ? (
-                <p className="p-8 text-center text-[13px]" style={{ color: "var(--faint)" }}>
-                  该筛选下暂无内容。
-                </p>
+                <div style={{ padding: "48px 28px", textAlign: "center", color: "var(--muted)" }}>
+                  <div style={{ fontFamily: "var(--font-serif)", fontSize: 16, color: "var(--ink-soft)", marginBottom: 6 }}>{isTriage ? "今日已清空 🎉" : "暂无内容"}</div>
+                  <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>{isTriage ? "所有更新都已处理完毕。" : "换个文件夹或分类看看。"}</div>
+                </div>
               ) : (
                 visible.map((vm) => (
                   <ItemRow
                     key={vm.id}
                     vm={vm}
+                    cn={displayCn(vm)}
                     active={false}
-                    unread={!readIds.has(vm.id)}
-                    starred={starredIds.has(vm.id)}
-                    onOpen={() => openItem(vm.id)}
+                    isRead={read.has(vm.id)}
+                    isStarred={star.has(vm.id)}
+                    isTriage={isTriage}
+                    hov={false}
                     mobile
+                    onOpen={() => {
+                      open(vm.id);
+                      setShowEn(false);
+                      setMobileView("read");
+                    }}
                   />
                 ))
               )}
             </div>
 
-            <div
-              className="shrink-0 px-5 pb-[30px] pt-3 text-center"
-              style={{ borderTop: "1px solid var(--line)", background: "var(--surface)" }}
-            >
+            <div style={{ flex: "0 0 auto", borderTop: "1px solid var(--line)", background: "var(--surface)", padding: "12px 20px 30px", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <PBDisclaimer compact />
             </div>
           </>
         ) : (
-          selected && (
+          item && (
             <>
-              <div
-                className="flex shrink-0 items-center px-4 pt-[54px] pb-3"
-                style={{ borderBottom: "1px solid var(--line)" }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setMobileView("list")}
-                  className="text-[14px] font-medium"
-                  style={{ color: "var(--ink-soft)" }}
-                >
-                  ‹ {activeFolder.cn}
+              <div style={{ flex: "0 0 auto", padding: "54px 16px 12px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid var(--line)", background: "var(--paper)" }}>
+                <button type="button" onClick={() => setMobileView("list")} style={{ display: "inline-flex", alignItems: "center", gap: 4, border: "none", background: "none", cursor: "pointer", color: "var(--ink-soft)", fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 500, padding: 0 }}>
+                  <svg width="9" height="15" viewBox="0 0 9 15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <path d="M7.5 1.5L1.5 7.5l6 6" />
+                  </svg>
+                  收件箱
                 </button>
-                <span className="ml-auto">
-                  <PBPlatform name={selected.platform} seal={selected.platformSeal} />
-                </span>
+                <span style={{ flex: 1 }} />
+                {isTriage && (
+                  <button type="button" onClick={() => dismiss(item.id, false, mobileRootRef.current)} style={{ border: "none", background: "none", cursor: "pointer", color: "var(--muted)", fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 500, padding: "0 4px" }}>
+                    移除
+                  </button>
+                )}
+                <PBPlatform name={item.platform} />
               </div>
-              <div className="min-h-0 flex-1 overflow-y-auto" style={{ padding: "22px 22px 28px" }}>
-                <ReaderArticle vm={selected} showEnglish={showEnglish} onToggleEnglish={() => setShowEnglish((v) => !v)} mobile />
+
+              <div style={{ flex: 1, minHeight: 0, overflow: "auto", padding: "22px 22px 28px" }}>
+                <ReaderArticle vm={item} cn={displayCn(item)} showEn={showEn} mobile onToggleEn={() => setShowEn((v) => !v)} />
               </div>
-              <div
-                className="flex shrink-0 items-center gap-2 px-4 pb-[28px] pt-3"
-                style={{ borderTop: "1px solid var(--line)", background: "var(--surface)" }}
-              >
-                <button
-                  type="button"
-                  onClick={() => toggleStar(selected.id)}
-                  className="flex-1 rounded-lg border py-2 text-[13px]"
-                  style={
-                    starredIds.has(selected.id)
-                      ? { color: "var(--seal)", background: "var(--seal-wash)", borderColor: "var(--seal-line)" }
-                      : { color: "var(--ink-soft)", borderColor: "var(--line)" }
-                  }
-                >
-                  {starredIds.has(selected.id) ? "★ 已加星" : "加星"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => toggleSave(selected.id)}
-                  className="flex-1 rounded-lg border py-2 text-[13px]"
-                  style={
-                    savedIds.has(selected.id)
-                      ? { color: "var(--seal)", background: "var(--seal-wash)", borderColor: "var(--seal-line)" }
-                      : { color: "var(--ink-soft)", borderColor: "var(--line)" }
-                  }
-                >
-                  {savedIds.has(selected.id) ? "✓ 待读" : "待读"}
-                </button>
-                <a
-                  href={selected.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 rounded-lg py-2 text-center text-[13px] font-medium"
-                  style={{ background: "var(--ink)", color: "var(--paper)" }}
-                >
-                  原文 ↗
-                </a>
+
+              <div style={{ flex: "0 0 auto", borderTop: "1px solid var(--line)", background: "var(--surface)", padding: "12px 16px 28px", display: "flex", flexDirection: "column", gap: 9 }}>
+                {isTriage && (
+                  <button
+                    type="button"
+                    onClick={() => dismiss(item.id, true, mobileRootRef.current)}
+                    style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "12px 0", borderRadius: 11, cursor: "pointer", border: "none", background: "var(--ink)", color: "var(--paper)", fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600 }}
+                  >
+                    ✓ 确认读完 · 撒花
+                  </button>
+                )}
+                <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                  <button
+                    type="button"
+                    onClick={() => togStar(item.id)}
+                    style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 11, cursor: "pointer", border: "1px solid " + (star.has(item.id) ? "color-mix(in oklch, var(--seal) 40%, transparent)" : "var(--line)"), background: star.has(item.id) ? "color-mix(in oklch, var(--seal) 8%, transparent)" : "var(--surface)", color: star.has(item.id) ? "var(--seal)" : "var(--ink-soft)", fontFamily: "var(--font-sans)", fontSize: 12.5, fontWeight: 600 }}
+                  >
+                    <StarIcon filled={star.has(item.id)} />
+                    加星
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => togSave(item.id)}
+                    style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 11, cursor: "pointer", border: "1px solid " + (save.has(item.id) ? "color-mix(in oklch, var(--seal) 40%, transparent)" : "var(--line)"), background: save.has(item.id) ? "color-mix(in oklch, var(--seal) 8%, transparent)" : "var(--surface)", color: save.has(item.id) ? "var(--seal)" : "var(--ink-soft)", fontFamily: "var(--font-sans)", fontSize: 12.5, fontWeight: 600 }}
+                  >
+                    <SaveIcon filled={save.has(item.id)} />
+                    {save.has(item.id) ? "已加待读" : "待读"}
+                  </button>
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ flex: 1, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 11, cursor: "pointer", border: "none", background: "var(--ink)", color: "var(--paper)", fontFamily: "var(--font-sans)", fontSize: 12.5, fontWeight: 600, textDecoration: "none" }}
+                  >
+                    原文 <span style={{ fontFamily: "var(--font-mono)" }}>↗</span>
+                  </a>
+                </div>
               </div>
             </>
           )
         )}
       </div>
-    </div>
+    </>
   );
 }
