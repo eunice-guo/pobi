@@ -177,7 +177,13 @@ async function main() {
   if (notes.length) console.log("  notes:\n   - " + notes.join("\n   - "));
 }
 
-main().catch((err) => {
-  console.error("✗ builder failed:", err);
-  process.exit(1);
-});
+// Force a clean exit on success too: an enrichment HTTP keep-alive socket (or
+// other lingering handle) can keep Node's event loop alive after the feed is
+// written, hanging the CI step until the 6h timeout kills it before it can
+// commit. Exit explicitly once the work is done.
+main()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error("✗ builder failed:", err);
+    process.exit(1);
+  });
