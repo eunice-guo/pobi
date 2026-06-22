@@ -1,6 +1,6 @@
 // Shared shape between the builder (writes JSON) and the app (reads JSON).
 
-export type Channel = "x" | "substack" | "transcript";
+export type Channel = "x" | "substack" | "transcript" | "research";
 
 export interface Source {
   handle: string; // X username, or RSS URL for substack

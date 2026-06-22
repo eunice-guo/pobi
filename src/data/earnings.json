@@ -1,0 +1,15 @@
+{
+  "_comment": "破壁 / GlobalInfo — earnings watch (业绩记录待读队列). 9 tech 龙头. The builder (scripts/lib/edgar.mjs) pulls each company's latest earnings 8-K (Item 2.02 Results of Operations) from SEC EDGAR — real, dated, free, 绝不编造 — and links the official filing + the IR webcast replay. cik: SEC CIK (zero-padded). ir: investor-relations earnings/events page for the call recording.",
+  "perCompany": 1,
+  "companies": [
+    { "ticker": "NVDA",  "name": "英伟达 NVIDIA",        "cik": "0001045810", "ir": "https://investor.nvidia.com/financial-info/quarterly-results/" },
+    { "ticker": "AAPL",  "name": "苹果 Apple",            "cik": "0000320193", "ir": "https://investor.apple.com/investor-relations/default.aspx" },
+    { "ticker": "MSFT",  "name": "微软 Microsoft",        "cik": "0000789019", "ir": "https://www.microsoft.com/en-us/investor/earnings/trended/income-statements.aspx" },
+    { "ticker": "GOOGL", "name": "谷歌 Alphabet",         "cik": "0001652044", "ir": "https://abc.xyz/investor/" },
+    { "ticker": "AMZN",  "name": "亚马逊 Amazon",          "cik": "0001018724", "ir": "https://ir.aboutamazon.com/quarterly-results/default.aspx" },
+    { "ticker": "META",  "name": "Meta Platforms",        "cik": "0001326801", "ir": "https://investor.atmeta.com/investor-news/" },
+    { "ticker": "TSLA",  "name": "特斯拉 Tesla",          "cik": "0001318605", "ir": "https://ir.tesla.com/" },
+    { "ticker": "AMD",   "name": "超威 AMD",              "cik": "0000002488", "ir": "https://ir.amd.com/news-events/financial-results" },
+    { "ticker": "AVGO",  "name": "博通 Broadcom",         "cik": "0001730168", "ir": "https://investors.broadcom.com/financial-information/quarterly-results" }
+  ]
+}

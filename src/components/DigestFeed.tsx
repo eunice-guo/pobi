@@ -8,6 +8,17 @@ import Calendar from "./Calendar";
 
 const WATCH_KEY = "pobi.watchlist";
 const SEEN_KEY = "pobi.lastSeenAt";
+const READ_KEY = "pobi.readIds";
+
+// Channel filter chips. null = all. transcript (业绩记录) + research (资管观点)
+// are the "待读清单" lanes; combine with 只看待读 to get a clean reading queue.
+const CHANNELS: { key: string | null; label: string }[] = [
+  { key: null, label: "全部" },
+  { key: "transcript", label: "业绩记录" },
+  { key: "research", label: "资管观点" },
+  { key: "substack", label: "Substack" },
+  { key: "x", label: "X" },
+];
 
 // 龙头 default watchlist — Magnificent 7 + AMD + SpaceX (private, tracked as a
 // pseudo-ticker). Seeded on first visit so the rail isn't empty; the user can
@@ -22,6 +33,9 @@ export default function DigestFeed() {
   const [selected, setSelected] = useState<string | null>(null); // ticker or null = all
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [lastSeen, setLastSeen] = useState<number>(0);
+  const [channel, setChannel] = useState<string | null>(null); // channel filter or null = all
+  const [unreadOnly, setUnreadOnly] = useState(false);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch("/feed/latest.json")
@@ -43,8 +57,38 @@ export default function DigestFeed() {
         setWatchlist(existing);
       }
       setLastSeen(Number(localStorage.getItem(SEEN_KEY) || 0));
+      const r = localStorage.getItem(READ_KEY);
+      if (r) setReadIds(new Set(JSON.parse(r) as string[]));
     } catch {}
   }, []);
+
+  const persistRead = (next: Set<string>) => {
+    try {
+      localStorage.setItem(READ_KEY, JSON.stringify([...next]));
+    } catch {}
+  };
+  const toggleRead = (id: string) => {
+    setReadIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      persistRead(next);
+      return next;
+    });
+  };
+  // Auto-mark on open. Persist synchronously (not just inside the state updater)
+  // because opening the title link unmounts this component mid-navigation — a
+  // deferred write could be dropped before it ever runs.
+  const markRead = (id: string) => {
+    try {
+      const cur = new Set<string>(JSON.parse(localStorage.getItem(READ_KEY) || "[]"));
+      if (!cur.has(id)) {
+        cur.add(id);
+        localStorage.setItem(READ_KEY, JSON.stringify([...cur]));
+      }
+    } catch {}
+    setReadIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+  };
 
   useEffect(() => {
     if (feed) localStorage.setItem(SEEN_KEY, String(Date.now()));
@@ -73,9 +117,17 @@ export default function DigestFeed() {
     () => (selected ? items.filter((i) => i.tickers.includes(selected)) : items),
     [items, selected]
   );
+  const channelScoped = useMemo(
+    () => (channel ? tickerScoped.filter((i) => i.channel === channel) : tickerScoped),
+    [tickerScoped, channel]
+  );
+  const dateScoped = useMemo(
+    () => (selectedDate ? channelScoped.filter((i) => localDay(i.publishedAt) === selectedDate) : channelScoped),
+    [channelScoped, selectedDate]
+  );
   const visible = useMemo(
-    () => (selectedDate ? tickerScoped.filter((i) => localDay(i.publishedAt) === selectedDate) : tickerScoped),
-    [tickerScoped, selectedDate]
+    () => (unreadOnly ? dateScoped.filter((i) => !readIds.has(i.id)) : dateScoped),
+    [dateScoped, unreadOnly, readIds]
   );
 
   const counts = useMemo(() => {
@@ -83,6 +135,22 @@ export default function DigestFeed() {
     for (const t of watchlist) c[t] = items.filter((i) => i.tickers.includes(t)).length;
     return c;
   }, [items, watchlist]);
+
+  // per-channel counts within the current ticker scope (drives the filter chips)
+  const channelCounts = useMemo(() => {
+    const c: Record<string, number> = {};
+    for (const i of tickerScoped) c[i.channel] = (c[i.channel] || 0) + 1;
+    return c;
+  }, [tickerScoped]);
+
+  // knowledge-tracker progress for the current scope (channel + ticker + date,
+  // before the 只看待读 filter so the numbers stay stable as you read).
+  const progress = useMemo(() => {
+    const total = dateScoped.length;
+    const read = dateScoped.reduce((n, i) => n + (readIds.has(i.id) ? 1 : 0), 0);
+    const pct = total ? Math.round((read / total) * 100) : 0;
+    return { total, read, unread: total - read, pct };
+  }, [dateScoped, readIds]);
 
   const isNew = (i: FeedItem) => lastSeen > 0 && new Date(i.publishedAt).getTime() > lastSeen;
 
@@ -128,6 +196,45 @@ export default function DigestFeed() {
 
       {/* RIGHT — scrolling news column */}
       <section>
+        {/* channel filter + 待读 toggle */}
+        <div className="mb-3 flex flex-wrap items-center gap-1.5">
+          {CHANNELS.map((c) => {
+            const active = channel === c.key;
+            const n = c.key === null ? tickerScoped.length : channelCounts[c.key] || 0;
+            return (
+              <button
+                key={c.label}
+                type="button"
+                onClick={() => setChannel(c.key)}
+                className="rounded-full border px-2.5 py-1 font-mono text-[11px] transition-colors"
+                style={
+                  active
+                    ? { background: "var(--teal)", color: "var(--paper)", borderColor: "var(--teal)" }
+                    : { borderColor: "var(--line)", color: "var(--ink-soft)" }
+                }
+              >
+                {c.label}
+                <span className="ml-1 tabular-nums" style={{ opacity: 0.7 }}>
+                  {n}
+                </span>
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setUnreadOnly((v) => !v)}
+            className="ml-auto rounded-full border px-2.5 py-1 font-mono text-[11px] transition-colors"
+            style={
+              unreadOnly
+                ? { background: "var(--teal-soft)", color: "var(--teal)", borderColor: "var(--teal)" }
+                : { borderColor: "var(--line)", color: "var(--ink-faint)" }
+            }
+            title="只显示尚未标为已读的条目"
+          >
+            {unreadOnly ? "● 只看待读" : "只看待读"}
+          </button>
+        </div>
+
         <div
           className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 border-b pb-3 font-mono text-[11px] uppercase tracking-wide"
           style={{ color: "var(--ink-faint)", borderColor: "var(--line)" }}
@@ -140,6 +247,23 @@ export default function DigestFeed() {
               {fullDateLabel(visible[0]?.publishedAt ?? selectedDate + "T00:00:00")}
             </span>
           )}
+          {/* knowledge-tracker progress */}
+          <span className="flex items-center gap-2 normal-case">
+            <span title="本范围内已读 / 待读">
+              <span style={{ color: "var(--teal)" }}>已读 {progress.read}</span>
+              <span style={{ color: "var(--ink-faint)" }}> · 待读 {progress.unread}</span>
+            </span>
+            <span
+              className="h-1.5 w-16 overflow-hidden rounded-full"
+              style={{ background: "var(--line)" }}
+              aria-label={`已读 ${progress.pct}%`}
+            >
+              <span
+                className="block h-full rounded-full transition-all"
+                style={{ width: `${progress.pct}%`, background: "var(--teal)" }}
+              />
+            </span>
+          </span>
           <span className="ml-auto normal-case">截至 {feed.date}</span>
         </div>
 
@@ -160,7 +284,18 @@ export default function DigestFeed() {
               )}
             </div>
           ) : (
-            visible.map((i, idx) => <ItemCard key={i.id} item={i} isNew={isNew(i)} index={idx} watchlist={watchlist} />)
+            visible.map((i, idx) => (
+              <ItemCard
+                key={i.id}
+                item={i}
+                isNew={isNew(i)}
+                index={idx}
+                watchlist={watchlist}
+                isRead={readIds.has(i.id)}
+                onToggleRead={toggleRead}
+                onRead={markRead}
+              />
+            ))
           )}
         </div>
       </section>

@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { fetchSubstack } from "./lib/rss.mjs";
 import { fetchX } from "./lib/x.mjs";
+import { fetchEarnings } from "./lib/edgar.mjs";
 import { makeEnricher } from "./lib/enrich.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -27,7 +28,7 @@ async function main() {
   // ---- ingest ----
   let items = [];
 
-  const substackSources = sources.filter((s) => s.channel === "substack");
+  const substackSources = sources.filter((s) => s.channel === "substack" || s.channel === "research");
   for (const s of substackSources) {
     try {
       const got = await fetchSubstack(s, sinceMs);
@@ -60,8 +61,20 @@ async function main() {
     }
   }
 
-  // transcripts: documented next step — port EDGAR/IR fetch from simple-research.
-  notes.push("transcripts: not yet wired (phase 2 — port from simple-research EDGAR)");
+  // transcripts (业绩记录): latest earnings 8-K per 龙头 from SEC EDGAR.
+  // Standing read-queue — not gated by the lookback window.
+  try {
+    const earningsCfg = JSON.parse(await readFile(join(ROOT, "src", "data", "earnings.json"), "utf8"));
+    const perCompany = Number(process.env.EARNINGS_PER_CO || earningsCfg.perCompany || 1);
+    const got = await fetchEarnings(earningsCfg.companies, perCompany);
+    console.log(`  edgar: ${got.length} earnings filing(s) across ${earningsCfg.companies.length} 龙头`);
+    items.push(...got);
+    if (!got.length) notes.push("transcripts: EDGAR returned 0 (check SEC availability / User-Agent)");
+  } catch (err) {
+    const msg = `transcripts (EDGAR) failed: ${err.message}`;
+    console.warn(`  ! ${msg}`);
+    notes.push(msg);
+  }
 
   // newest first
   items.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));

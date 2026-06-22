@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { FeedItem } from "@/lib/types";
 import { dayLabel } from "@/lib/date";
 
-const CHANNEL_LABEL: Record<string, string> = { x: "X", substack: "Substack", transcript: "业绩记录" };
+const CHANNEL_LABEL: Record<string, string> = { x: "X", substack: "Substack", transcript: "业绩记录", research: "资管观点" };
 const SECTOR_LABEL: Record<string, string> = {
   "CHINA-TECH": "中国科技",
   "AI-SEMIS": "AI · 半导体",
@@ -15,6 +15,8 @@ const SECTOR_LABEL: Record<string, string> = {
   MACRO: "宏观",
   ENERGY: "能源",
   SHORT: "做空",
+  EARNINGS: "业绩",
+  "ASSET-MGR": "资管",
 };
 
 export default function ItemCard({
@@ -22,19 +24,31 @@ export default function ItemCard({
   isNew,
   index = 0,
   watchlist = [],
+  isRead = false,
+  onToggleRead,
+  onRead,
 }: {
   item: FeedItem;
   isNew: boolean;
   index?: number;
   watchlist?: string[];
+  isRead?: boolean;
+  onToggleRead?: (id: string) => void;
+  onRead?: (id: string) => void;
 }) {
+  const markRead = () => onRead?.(item.id);
   const href = `/read?id=${encodeURIComponent(item.id)}`;
   const hasTickers = item.tickers.length > 0;
 
   return (
     <article
       className="rise group rounded-lg border p-5 transition-shadow hover:shadow-[0_2px_20px_-8px_rgba(0,0,0,0.18)]"
-      style={{ background: "var(--surface)", borderColor: "var(--line)", animationDelay: `${Math.min(index, 8) * 45}ms` }}
+      style={{
+        background: "var(--surface)",
+        borderColor: "var(--line)",
+        animationDelay: `${Math.min(index, 8) * 45}ms`,
+        opacity: isRead ? 0.55 : 1,
+      }}
     >
       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs" style={{ color: "var(--ink-soft)" }}>
         <span className="font-mono tabular-nums" style={{ color: "var(--ink-faint)" }}>
@@ -57,7 +71,7 @@ export default function ItemCard({
       </div>
 
       {item.title && (
-        <Link href={href}>
+        <Link href={href} onClick={markRead}>
           <h3 className="font-display mt-2.5 text-[21px] font-semibold leading-snug transition-colors group-hover:text-[var(--teal)]">
             {item.title}
           </h3>
@@ -112,7 +126,7 @@ export default function ItemCard({
 
       <div className="mt-3.5 flex items-center gap-4 text-xs">
         {item.translationZh && (
-          <Link href={href} className="font-medium underline-offset-2 hover:underline" style={{ color: "var(--teal)" }}>
+          <Link href={href} onClick={markRead} className="font-medium underline-offset-2 hover:underline" style={{ color: "var(--teal)" }}>
             阅读全文译文 →
           </Link>
         )}
@@ -120,11 +134,27 @@ export default function ItemCard({
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={markRead}
           className="underline-offset-2 hover:underline"
           style={{ color: "var(--ink-faint)" }}
         >
-          原文 ↗
+          {item.channel === "transcript" ? "SEC 原文 ↗" : "原文 ↗"}
         </a>
+        {onToggleRead && (
+          <button
+            type="button"
+            onClick={() => onToggleRead(item.id)}
+            className="ml-auto rounded border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide transition-colors"
+            style={
+              isRead
+                ? { borderColor: "var(--teal)", color: "var(--teal)", background: "var(--teal-soft)" }
+                : { borderColor: "var(--line)", color: "var(--ink-faint)" }
+            }
+            title={isRead ? "点按标回待读" : "标为已读"}
+          >
+            {isRead ? "✓ 已读" : "标为已读"}
+          </button>
+        )}
       </div>
     </article>
   );
