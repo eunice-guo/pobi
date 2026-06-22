@@ -19,7 +19,7 @@ const MAX_TOKENS = 4096; // full-length faithful translation, not a half
 
 const SYSTEM = `你是中美投资信息差的翻译与摘要助手。给你一段英文投资观点（来自 X 或 Substack），你要：
 1) summaryZh：1-3 句中文摘要，点明"在说什么 + 为什么对投资者重要"。客观，不加买卖建议。
-2) translationZh：忠实的中文全文翻译，保留原意与语气，不增删观点、不编造。术语首次出现就地用括号简释。
+2) translationZh：忠实的中文全文翻译，保留原意与语气，不增删观点、不编造。术语首次出现就地用括号简释。**必须保留原文的段落结构：每个自然段之间空一行（用 \n\n 分段），不要把全文挤成一整块**，确保可读性。
 3) tickers：文中提及或直接相关的美股 / 中概股代码数组（大写，如 ["NVDA","TSM","BABA"]）。
 包括以中英文公司名出现、但有对应美股代码的。重点龙头务必命中：
 苹果→AAPL，微软→MSFT，谷歌/Alphabet→GOOGL，亚马逊→AMZN，英伟达→NVDA，Meta/脸书→META，

@@ -11,11 +11,13 @@ export const CURATED_CHANNELS = new Set<Channel>(["podcast", "bookmark", "paper"
 export const DISABLED_SOURCES_KEY = "pobi.disabledSources";
 export const RENAMES_KEY = "pobi.sourceRenames";
 
-// Stable identity for "which source is this item from", matching the keys the
-// /sources page assigns: a curated item is keyed by its own id; a subscription
-// item is keyed by its source handle (== item.author for x/substack/research).
+// Stable identity for "which source/subscription is this item from". Every
+// channel now keys by item.author: a handle (x/substack/research), a YouTube
+// show feed (podcast), a ticker (transcript), an arXiv author (paper), or the
+// curated id (curated papers/bookmarks). Removing a subscription = hiding every
+// item whose author matches — so removing a show/author clears all its items.
 export function sourceKeyOf(item: FeedItem): string {
-  return CURATED_CHANNELS.has(item.channel) ? item.id : item.author;
+  return item.author;
 }
 
 export const CHANNEL_META: Record<string, { label: string; seal: boolean }> = {
@@ -51,12 +53,13 @@ export const CHANNEL_EN: Record<string, string> = {
 };
 
 // Folders (read-state lanes), matching the handoff.
-export type Folder = "today" | "unread" | "starred" | "reading";
+export type Folder = "today" | "unread" | "starred" | "reading" | "done";
 export const FOLDERS: { key: Folder; cn: string; en: string }[] = [
   { key: "today", cn: "今日收件箱", en: "Today" },
   { key: "unread", cn: "未读", en: "Unread" },
   { key: "starred", cn: "已加星", en: "Starred" },
   { key: "reading", cn: "待读清单", en: "Reading" },
+  { key: "done", cn: "读完打卡", en: "Done" },
 ];
 
 export const SECTOR_LABEL: Record<string, string> = {

@@ -6,10 +6,11 @@
 import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { fetchSubstack } from "./lib/rss.mjs";
+import { fetchSubstack, fetchYouTube } from "./lib/rss.mjs";
 import { fetchX } from "./lib/x.mjs";
 import { fetchTranscripts } from "./lib/transcripts.mjs";
-import { fetchPodcasts, fetchBookmarks, fetchPapers } from "./lib/curated.mjs";
+import { fetchArxivAuthors } from "./lib/arxiv.mjs";
+import { fetchBookmarks, fetchPapers } from "./lib/curated.mjs";
 import { makeEnricher } from "./lib/enrich.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -37,6 +38,20 @@ async function main() {
       items.push(...got);
     } catch (err) {
       const msg = `substack ${s.displayName} failed: ${err.message}`;
+      console.warn(`  ! ${msg}`);
+      notes.push(msg);
+    }
+  }
+
+  // 播客访谈: each podcast SHOW is a YouTube-channel subscription; pull latest eps.
+  const podcastSources = sources.filter((s) => s.channel === "podcast");
+  for (const s of podcastSources) {
+    try {
+      const got = await fetchYouTube(s);
+      console.log(`  podcast ${s.displayName}: ${got.length} episode(s)`);
+      items.push(...got);
+    } catch (err) {
+      const msg = `podcast ${s.displayName} failed: ${err.message}`;
       console.warn(`  ! ${msg}`);
       notes.push(msg);
     }
@@ -77,17 +92,20 @@ async function main() {
     notes.push(msg);
   }
 
-  // curated standing queues (播客访谈 + 收藏): hand-picked, evergreen, link-style.
-  // Not gated by lookback. Ship pre-enriched (faithful Chinese already written).
+  // 论文 author subscriptions: latest arXiv papers per followed author.
   try {
-    const got = await fetchPodcasts(join(ROOT, "src", "data", "podcasts.json"));
-    console.log(`  podcasts: ${got.length} 访谈`);
+    const authorsCfg = JSON.parse(await readFile(join(ROOT, "src", "data", "authors.json"), "utf8"));
+    const got = await fetchArxivAuthors(authorsCfg.authors, authorsCfg.perAuthor || 3);
+    console.log(`  arxiv authors: ${got.length} paper(s) across ${authorsCfg.authors.length} author(s)`);
     items.push(...got);
   } catch (err) {
-    const msg = `podcasts failed: ${err.message}`;
+    const msg = `arxiv authors failed: ${err.message}`;
     console.warn(`  ! ${msg}`);
     notes.push(msg);
   }
+
+  // curated standing queues (收藏 + 论文 reading-club picks): evergreen, link-style,
+  // pre-enriched (faithful Chinese already written).
   try {
     const got = await fetchBookmarks(join(ROOT, "src", "data", "bookmarks.json"));
     console.log(`  bookmarks: ${got.length} 收藏`);

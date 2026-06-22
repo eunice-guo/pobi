@@ -25,6 +25,20 @@ const SAVE_KEY = "pobi.savedIds";
 const DISMISS_KEY = "pobi.dismissedIds";
 const SEEN_KEY = "pobi.lastSeenAt";
 const PAPER_SEED_KEY = "pobi.papersSeeded";
+const READLOG_KEY = "pobi.readLog"; // { 'YYYY-MM-DD': count } for 打卡 dashboard
+
+function loadMapNum(key: string): Record<string, number> {
+  try {
+    const r = localStorage.getItem(key);
+    return r ? (JSON.parse(r) as Record<string, number>) : {};
+  } catch {
+    return {};
+  }
+}
+function todayStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 function loadSet(key: string): Set<string> {
   try {
@@ -330,6 +344,118 @@ function ReaderArticle({
   );
 }
 
+// 读完打卡 — WeChat-Reading-style dashboard: weekly count, streak, and a month
+// calendar where every day you finished a read gets a cinnabar 印章 (stamp).
+function ReadingDashboard({ readLog }: { readLog: Record<string, number> }) {
+  const now = new Date();
+  const y = now.getFullYear();
+  const mo = now.getMonth();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const ds = (yy: number, mm: number, dd: number) => `${yy}-${pad(mm + 1)}-${pad(dd)}`;
+  const today = ds(y, mo, now.getDate());
+
+  const dow = (now.getDay() + 6) % 7; // Mon=0
+  let weekCount = 0;
+  for (let i = 0; i <= dow; i++) {
+    const d = new Date(y, mo, now.getDate() - i);
+    weekCount += readLog[ds(d.getFullYear(), d.getMonth(), d.getDate())] || 0;
+  }
+  let streak = 0;
+  for (let i = 0; ; i++) {
+    const d = new Date(y, mo, now.getDate() - i);
+    if ((readLog[ds(d.getFullYear(), d.getMonth(), d.getDate())] || 0) > 0) streak++;
+    else break;
+    if (i > 400) break;
+  }
+  const daysInMonth = new Date(y, mo + 1, 0).getDate();
+  let monthTotal = 0;
+  for (let dd = 1; dd <= daysInMonth; dd++) monthTotal += readLog[ds(y, mo, dd)] || 0;
+  const allTime = Object.values(readLog).reduce((a, b) => a + b, 0);
+
+  const startWeekday = (new Date(y, mo, 1).getDay() + 6) % 7;
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < startWeekday; i++) cells.push(null);
+  for (let dd = 1; dd <= daysInMonth; dd++) cells.push(dd);
+
+  const Stat = ({ n, label }: { n: number; label: string }) => (
+    <div style={{ flex: 1, textAlign: "center" }}>
+      <div style={{ fontFamily: "var(--font-serif)", fontSize: 24, fontWeight: 600, color: "var(--ink)", lineHeight: 1.1 }}>{n}</div>
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, letterSpacing: "0.06em", color: "var(--faint)", marginTop: 3 }}>{label}</div>
+    </div>
+  );
+
+  return (
+    <div style={{ border: "1px solid var(--line)", borderRadius: 12, background: "var(--surface)", padding: 16, marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <span style={{ fontFamily: "var(--font-serif)", fontSize: 16, fontWeight: 600, color: "var(--ink)" }}>读完打卡</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--faint)" }}>
+          {y} 年 {mo + 1} 月
+        </span>
+      </div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+        <Stat n={weekCount} label="本周读完" />
+        <Stat n={streak} label="连续打卡(天)" />
+        <Stat n={monthTotal} label="本月" />
+        <Stat n={allTime} label="累计" />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4 }}>
+        {["一", "二", "三", "四", "五", "六", "日"].map((w) => (
+          <div key={w} style={{ textAlign: "center", fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--faint)", paddingBottom: 2 }}>
+            {w}
+          </div>
+        ))}
+        {cells.map((dd, i) => {
+          if (dd === null) return <div key={`b${i}`} />;
+          const key = ds(y, mo, dd);
+          const stamped = (readLog[key] || 0) > 0;
+          const isToday = key === today;
+          return (
+            <div key={key} style={{ aspectRatio: "1", display: "grid", placeItems: "center" }}>
+              {stamped ? (
+                <div
+                  style={{
+                    width: "82%",
+                    height: "82%",
+                    borderRadius: 7,
+                    background: "var(--seal)",
+                    color: "#fff",
+                    display: "grid",
+                    placeItems: "center",
+                    transform: "rotate(-7deg)",
+                    boxShadow: "0 1px 3px color-mix(in oklch, var(--seal) 35%, transparent)",
+                    fontFamily: "var(--font-serif)",
+                    fontSize: 13,
+                    fontWeight: 600,
+                  }}
+                  title={`${key} 读完 ${readLog[key]} 篇`}
+                >
+                  读
+                </div>
+              ) : (
+                <div
+                  style={{
+                    width: "82%",
+                    height: "82%",
+                    borderRadius: 7,
+                    display: "grid",
+                    placeItems: "center",
+                    border: isToday ? "1px solid var(--seal-line)" : "1px solid transparent",
+                    color: isToday ? "var(--seal)" : "var(--faint)",
+                    fontFamily: "var(--font-mono)",
+                    fontSize: 11,
+                  }}
+                >
+                  {dd}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function Triage() {
   const [feed, setFeed] = useState<Feed | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -348,6 +474,7 @@ export default function Triage() {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [disabledSources, setDisabledSources] = useState<Set<string>>(new Set());
   const [renames, setRenames] = useState<Record<string, string>>({});
+  const [readLog, setReadLog] = useState<Record<string, number>>({});
 
   const rootRef = useRef<HTMLDivElement>(null);
   const mobileRootRef = useRef<HTMLDivElement>(null);
@@ -361,6 +488,7 @@ export default function Triage() {
     setDismissed(loadSet(DISMISS_KEY));
     setDisabledSources(loadSet(DISABLED_SOURCES_KEY));
     setRenames(loadMap(RENAMES_KEY));
+    setReadLog(loadMapNum(READLOG_KEY));
     try {
       // drop legacy keys from the pre-Option-C build (watchlist/calendar removed)
       ["pobi.watchlist", "pobi.watchlist.seeded"].forEach((k) => localStorage.removeItem(k));
@@ -419,6 +547,7 @@ export default function Triage() {
         if (f === "unread") return !read.has(v.id) && !dis.has(v.id);
         if (f === "starred") return star.has(v.id);
         if (f === "reading") return save.has(v.id);
+        if (f === "done") return read.has(v.id);
         return true;
       });
       if (c) arr = arr.filter((v) => v.channel === c);
@@ -443,13 +572,24 @@ export default function Triage() {
 
   const item = useMemo(() => (sel ? vms.find((v) => v.id === sel) ?? null : null), [vms, sel]);
 
+  // Mark read + stamp today's 打卡. Synchronous via localStorage so a newly-read
+  // item is logged exactly once (no StrictMode double-count) and survives the
+  // navigation away when the title link unmounts the component.
   const markRead = useCallback((id: string) => {
-    setRead((r) => {
-      if (r.has(id)) return r;
-      const n = new Set(r).add(id);
-      saveSet(READ_KEY, n);
-      return n;
-    });
+    try {
+      const cur = new Set<string>(JSON.parse(localStorage.getItem(READ_KEY) || "[]"));
+      if (cur.has(id)) return;
+      cur.add(id);
+      localStorage.setItem(READ_KEY, JSON.stringify([...cur]));
+      const log = loadMapNum(READLOG_KEY);
+      const d = todayStr();
+      log[d] = (log[d] || 0) + 1;
+      localStorage.setItem(READLOG_KEY, JSON.stringify(log));
+      setRead(cur);
+      setReadLog(log);
+    } catch {
+      setRead((r) => (r.has(id) ? r : new Set(r).add(id)));
+    }
   }, []);
 
   const tog = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, key: string) => (id: string) =>
@@ -529,7 +669,8 @@ export default function Triage() {
   const unreadCount = useMemo(() => vms.filter((v) => !read.has(v.id) && !dismissed.has(v.id)).length, [vms, read, dismissed]);
   const starCount = useMemo(() => vms.filter((v) => star.has(v.id)).length, [vms, star]);
   const saveCount = useMemo(() => vms.filter((v) => save.has(v.id)).length, [vms, save]);
-  const folderCount: Record<Folder, number> = { today: todayCount, unread: unreadCount, starred: starCount, reading: saveCount };
+  const doneReadCount = useMemo(() => vms.filter((v) => read.has(v.id)).length, [vms, read]);
+  const folderCount: Record<Folder, number> = { today: todayCount, unread: unreadCount, starred: starCount, reading: saveCount, done: doneReadCount };
 
   const sourceCount = useMemo(() => new Set(visible.map((v) => displayCn(v))).size, [visible, displayCn]);
   const activeFolder = FOLDERS.find((f) => f.key === folder)!;
@@ -663,10 +804,15 @@ export default function Triage() {
             <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--muted)" }}>最新 ↓</span>
           </div>
           <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+            {folder === "done" && (
+              <div style={{ padding: "14px 14px 0" }}>
+                <ReadingDashboard readLog={readLog} />
+              </div>
+            )}
             {visible.length === 0 ? (
-              <div style={{ padding: "48px 28px", textAlign: "center", color: "var(--muted)" }}>
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: 16, color: "var(--ink-soft)", marginBottom: 6 }}>{isTriage ? "今日已清空 🎉" : "暂无内容"}</div>
-                <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>{isTriage ? "所有更新都已处理完毕。" : "换个文件夹或分类看看。"}</div>
+              <div style={{ padding: folder === "done" ? "12px 28px 40px" : "48px 28px", textAlign: "center", color: "var(--muted)" }}>
+                <div style={{ fontFamily: "var(--font-serif)", fontSize: 16, color: "var(--ink-soft)", marginBottom: 6 }}>{isTriage ? "今日已清空 🎉" : folder === "done" ? "还没有读完的内容" : "暂无内容"}</div>
+                <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>{isTriage ? "所有更新都已处理完毕。" : folder === "done" ? "读完一篇就会在上面盖个章 📖" : "换个文件夹或分类看看。"}</div>
               </div>
             ) : (
               visible.map((vm) => (
@@ -845,10 +991,15 @@ export default function Triage() {
             </div>
 
             <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+              {folder === "done" && (
+                <div style={{ padding: "14px 16px 0" }}>
+                  <ReadingDashboard readLog={readLog} />
+                </div>
+              )}
               {visible.length === 0 ? (
-                <div style={{ padding: "48px 28px", textAlign: "center", color: "var(--muted)" }}>
-                  <div style={{ fontFamily: "var(--font-serif)", fontSize: 16, color: "var(--ink-soft)", marginBottom: 6 }}>{isTriage ? "今日已清空 🎉" : "暂无内容"}</div>
-                  <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>{isTriage ? "所有更新都已处理完毕。" : "换个文件夹或分类看看。"}</div>
+                <div style={{ padding: folder === "done" ? "12px 28px 40px" : "48px 28px", textAlign: "center", color: "var(--muted)" }}>
+                  <div style={{ fontFamily: "var(--font-serif)", fontSize: 16, color: "var(--ink-soft)", marginBottom: 6 }}>{isTriage ? "今日已清空 🎉" : folder === "done" ? "还没有读完的内容" : "暂无内容"}</div>
+                  <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>{isTriage ? "所有更新都已处理完毕。" : folder === "done" ? "读完一篇就会盖个章 📖" : "换个文件夹或分类看看。"}</div>
                 </div>
               ) : (
                 visible.map((vm) => (

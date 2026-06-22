@@ -4,9 +4,7 @@ import Link from "next/link";
 import type { Channel, Feed } from "@/lib/types";
 import sourcesCfg from "@/data/sources.json";
 import earningsCfg from "@/data/earnings.json";
-import podcastsCfg from "@/data/podcasts.json";
-import bookmarksCfg from "@/data/bookmarks.json";
-import papersCfg from "@/data/papers.json";
+import authorsCfg from "@/data/authors.json";
 import { PBBrand, PBAvatar, PBPlatform, PBDisclaimer } from "@/components/pb";
 import { pobiBurst, pobiCelebrate } from "@/lib/confetti";
 import {
@@ -22,7 +20,7 @@ import {
 const REMOVED_KEY = "pobi.sourceRemovals";
 const ADDS_KEY = "pobi.sourceAdds";
 
-type Entry = { key: string; channel: Channel; name: string; sub: string; buildEnabled: boolean };
+type Entry = { key: string; channel: Channel; name: string; sub: string; buildEnabled: boolean; website?: string; github?: string };
 type AddDraft = { channel: Channel; name: string; en: string; handle: string; sectors: string };
 
 function domainOf(url: string): string {
@@ -33,24 +31,36 @@ function domainOf(url: string): string {
   }
 }
 
-// Build the managed-source list from the curated config files (matches the
-// keys sourceKeyOf() assigns in the feed, so toggles hide the right items).
+// Build the SUBSCRIPTION list (not individual items): RSS/X/podcast handles +
+// 龙头 transcript companies + arXiv author follows. Keys match sourceKeyOf(item)
+// so 暂停/取消订阅 hides every item from that subscription.
 function baseEntries(): Entry[] {
   const out: Entry[] = [];
-  for (const s of sourcesCfg.sources as Array<{ handle: string; displayName: string; channel: string; priority?: string; sectors?: string[]; enabled: boolean }>) {
+  for (const s of sourcesCfg.sources as Array<{ handle: string; displayName: string; channel: string; sectors?: string[]; enabled: boolean }>) {
     const ch = s.channel as Channel;
-    const sub = ch === "x" ? `@${s.handle} · ${(s.sectors || []).join("/")}` : `${domainOf(s.handle)} · ${(s.sectors || []).join("/")}`;
-    out.push({ key: s.handle, channel: ch, name: s.displayName, sub, buildEnabled: s.enabled });
+    const tags = (s.sectors || []).join(" / ");
+    const sub =
+      ch === "x"
+        ? `@${s.handle}${tags ? ` · ${tags}` : ""}`
+        : ch === "podcast"
+          ? `YouTube · ${tags || "播客"}`
+          : `${domainOf(s.handle)}${tags ? ` · ${tags}` : ""}`;
+    out.push({ key: s.handle, channel: ch, name: s.displayName, sub, buildEnabled: s.enabled, website: ch === "podcast" || ch === "substack" || ch === "research" ? s.handle.replace(/\/feed\/?$|\/rss\/?$/, "") : undefined });
   }
-  for (const c of earningsCfg.companies as Array<{ ticker: string; name: string }>) {
-    out.push({ key: c.ticker, channel: "transcript", name: c.name, sub: `$${c.ticker} · SEC EDGAR`, buildEnabled: true });
+  for (const c of earningsCfg.companies as Array<{ ticker: string; name: string; ir?: string }>) {
+    out.push({ key: c.ticker, channel: "transcript", name: c.name, sub: `$${c.ticker} · 财报电话会`, buildEnabled: true, website: c.ir });
   }
-  for (const x of podcastsCfg.interviews as Array<{ id: string; title: string; show?: string; guest?: string; enabled?: boolean }>)
-    out.push({ key: `podcast:${x.id}`, channel: "podcast", name: x.title, sub: [x.show, x.guest].filter(Boolean).join(" · "), buildEnabled: x.enabled !== false });
-  for (const x of papersCfg.papers as Array<{ id: string; title: string; authors?: string; venue?: string; enabled?: boolean }>)
-    out.push({ key: `paper:${x.id}`, channel: "paper", name: x.title, sub: [x.venue, x.authors].filter(Boolean).join(" · "), buildEnabled: x.enabled !== false });
-  for (const x of bookmarksCfg.bookmarks as Array<{ id: string; title: string; source?: string; kind?: string; enabled?: boolean }>)
-    out.push({ key: `bookmark:${x.id}`, channel: "bookmark", name: x.title, sub: [x.kind, x.source].filter(Boolean).join(" · "), buildEnabled: x.enabled !== false });
+  for (const a of authorsCfg.authors as Array<{ name: string; displayName?: string; website?: string; github?: string; sectors?: string[]; enabled?: boolean }>) {
+    out.push({
+      key: a.name,
+      channel: "paper",
+      name: a.displayName || a.name,
+      sub: `arXiv · ${a.name}${a.sectors && a.sectors.length ? ` · ${a.sectors.join(" / ")}` : ""}`,
+      buildEnabled: a.enabled !== false,
+      website: a.website || undefined,
+      github: a.github || undefined,
+    });
+  }
   return out;
 }
 
@@ -390,7 +400,19 @@ export default function SourcesPage() {
                           {paused && <span style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, letterSpacing: "0.08em", color: "var(--muted)", border: "1px solid var(--line)", borderRadius: 999, padding: "1px 7px" }}>已暂停</span>}
                         </div>
                       )}
-                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--faint)", marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s.sub}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 3, flexWrap: "wrap" }}>
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--faint)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", minWidth: 0 }}>{s.sub}</span>
+                        {s.website && (
+                          <a href={s.website} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--seal)", textDecoration: "none", flex: "0 0 auto" }}>
+                            网站 ↗
+                          </a>
+                        )}
+                        {s.github && (
+                          <a href={s.github} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--seal)", textDecoration: "none", flex: "0 0 auto" }}>
+                            GitHub ↗
+                          </a>
+                        )}
+                      </div>
                     </div>
                     <div style={{ textAlign: "right", flex: "0 0 auto", marginRight: 4 }}>
                       <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--ink-soft)" }}>{weeklyOf[s.key] || 0}</div>

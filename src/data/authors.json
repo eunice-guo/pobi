@@ -1,0 +1,9 @@
+{
+  "_comment": "破壁 / GlobalInfo — 论文 author SUBSCRIPTIONS. The builder (scripts/lib/arxiv.mjs) queries arXiv for each author's most recent papers (au:\"Name\"), so new work auto-appears in the 论文 channel — subscribe to a person, not a single paper. `name` is the exact arXiv author string; `website`/`github` are shown in 来源管理. Removing an author here (or 暂停 in 来源管理) stops/hides their auto-fetched papers. The curated reading-club list in papers.json is separate and stays. Add authors freely.",
+  "perAuthor": 3,
+  "authors": [
+    { "name": "Danijar Hafner", "displayName": "Danijar Hafner · 世界模型 / Dreamer", "website": "https://danijar.com", "github": "https://github.com/danijar", "sectors": ["WORLD-MODEL", "AI-RESEARCH"], "enabled": true },
+    { "name": "Sergey Levine", "displayName": "Sergey Levine · 机器人学习（UC Berkeley）", "website": "https://people.eecs.berkeley.edu/~svlevine/", "github": "", "sectors": ["ROBOTICS", "AI-RESEARCH"], "enabled": true },
+    { "name": "Chelsea Finn", "displayName": "Chelsea Finn · 机器人学习（Stanford）", "website": "https://ai.stanford.edu/~cbfinn/", "github": "", "sectors": ["ROBOTICS", "AI-RESEARCH"], "enabled": true }
+  ]
+}
