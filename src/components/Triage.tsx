@@ -197,7 +197,7 @@ function ItemRow({
         </div>
         <div
           style={{
-            fontSize: mobile ? 12.5 : 12,
+            fontSize: mobile ? 13 : 12.5,
             lineHeight: mobile ? 1.55 : 1.5,
             color: "var(--muted)",
             display: "-webkit-box",
@@ -354,34 +354,56 @@ export default function Triage() {
   const paneRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch("/feed/latest.json")
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-      .then((f: Feed) => {
-        setFeed(f);
-        try {
-          if (!localStorage.getItem(PAPER_SEED_KEY)) {
-            const saved = loadSet(SAVE_KEY);
-            for (const it of f.items) if (it.channel === "paper") saved.add(it.id);
-            saveSet(SAVE_KEY, saved);
-            setSave(saved);
-            localStorage.setItem(PAPER_SEED_KEY, "1");
-          }
-        } catch {}
-      })
-      .catch((e) => setError(String(e)));
-
+    // fast first paint from whatever is stored
     setRead(loadSet(READ_KEY));
     setStar(loadSet(STAR_KEY));
-    setSave((p) => {
-      const s = loadSet(SAVE_KEY);
-      return s.size ? s : p;
-    });
+    setSave(loadSet(SAVE_KEY));
     setDismissed(loadSet(DISMISS_KEY));
     setDisabledSources(loadSet(DISABLED_SOURCES_KEY));
     setRenames(loadMap(RENAMES_KEY));
     try {
+      // drop legacy keys from the pre-Option-C build (watchlist/calendar removed)
+      ["pobi.watchlist", "pobi.watchlist.seeded"].forEach((k) => localStorage.removeItem(k));
       localStorage.setItem(SEEN_KEY, String(Date.now()));
     } catch {}
+
+    fetch("/feed/latest.json")
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((f: Feed) => {
+        setFeed(f);
+        // ── localStorage hygiene ────────────────────────────────────────────
+        // The read/star/save/dismissed sets store full item IDs and otherwise
+        // grow unbounded as the daily feed turns over. Prune each to the IDs
+        // present in the current feed — the app can only ever show feed items,
+        // so dropping stale IDs is lossless and caps storage at ~feed size.
+        const valid = new Set(f.items.map((i) => i.id));
+        const prune = (key: string): Set<string> => {
+          const cur = loadSet(key);
+          const next = new Set([...cur].filter((id) => valid.has(id)));
+          if (next.size !== cur.size) saveSet(key, next);
+          return next;
+        };
+        prune(READ_KEY);
+        prune(STAR_KEY);
+        let saved = prune(SAVE_KEY);
+        prune(DISMISS_KEY);
+
+        // one-time: seed the 论文 reading list into 待读 (after prune so it sticks)
+        try {
+          if (!localStorage.getItem(PAPER_SEED_KEY)) {
+            saved = new Set(saved);
+            for (const it of f.items) if (it.channel === "paper") saved.add(it.id);
+            saveSet(SAVE_KEY, saved);
+            localStorage.setItem(PAPER_SEED_KEY, "1");
+          }
+        } catch {}
+
+        setRead(loadSet(READ_KEY));
+        setStar(loadSet(STAR_KEY));
+        setSave(saved);
+        setDismissed(loadSet(DISMISS_KEY));
+      })
+      .catch((e) => setError(String(e)));
   }, []);
 
   const allVms = useMemo<TriageVM[]>(() => (feed?.items ?? []).map(toVM), [feed]);

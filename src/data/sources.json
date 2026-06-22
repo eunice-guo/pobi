@@ -25,6 +25,10 @@
     { "handle": "https://aswathdamodaran.blogspot.com/feeds/posts/default?alt=rss", "displayName": "Musings on Markets · Damodaran", "channel": "substack", "priority": "P2", "sectors": ["MACRO", "QUALITY"], "enabled": true },
 
     { "handle": "https://www.apolloacademy.com/feed/", "displayName": "Torsten Slok · Apollo（The Daily Spark）", "channel": "research", "priority": "P0", "sectors": ["MACRO", "ASSET-MGR"], "enabled": true },
+    { "handle": "https://awealthofcommonsense.com/feed/", "displayName": "Ben Carlson · 常识财富（Ritholtz Wealth）", "channel": "research", "priority": "P1", "sectors": ["ASSET-MGR", "EQUITY", "MACRO"], "enabled": true },
+    { "handle": "https://ritholtz.com/feed/", "displayName": "Barry Ritholtz · 大局观（The Big Picture）", "channel": "research", "priority": "P1", "sectors": ["ASSET-MGR", "MACRO"], "enabled": true },
+    { "handle": "https://klementoninvesting.substack.com/feed", "displayName": "Joachim Klement · 投资洞察", "channel": "research", "priority": "P1", "sectors": ["MACRO", "ASSET-MGR"], "enabled": true },
+    { "handle": "https://www.hussmanfunds.com/rss/", "displayName": "John Hussman · Hussman 基金市场评论", "channel": "research", "priority": "P2", "sectors": ["ASSET-MGR", "MACRO", "EQUITY"], "enabled": true },
     { "handle": "https://www.oaktreecapital.com/insights/memos", "displayName": "Howard Marks · Oaktree 备忘录（disabled: 无公开 RSS，待接入抓取）", "channel": "research", "priority": "P0", "sectors": ["QUALITY", "ASSET-MGR"], "enabled": false },
     { "handle": "https://www.gmo.com/americas/research-library/", "displayName": "Jeremy Grantham · GMO Insights（disabled: 无公开 RSS，待接入抓取）", "channel": "research", "priority": "P1", "sectors": ["MACRO", "ASSET-MGR"], "enabled": false },
     { "handle": "https://www.blackrock.com/corporate/insights/blackrock-investment-institute", "displayName": "BlackRock Investment Institute（disabled: 无公开 RSS，待接入抓取）", "channel": "research", "priority": "P1", "sectors": ["MACRO", "ASSET-MGR"], "enabled": false }

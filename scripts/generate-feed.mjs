@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { fetchSubstack } from "./lib/rss.mjs";
 import { fetchX } from "./lib/x.mjs";
-import { fetchEarnings } from "./lib/edgar.mjs";
+import { fetchTranscripts } from "./lib/transcripts.mjs";
 import { fetchPodcasts, fetchBookmarks, fetchPapers } from "./lib/curated.mjs";
 import { makeEnricher } from "./lib/enrich.mjs";
 
@@ -62,17 +62,17 @@ async function main() {
     }
   }
 
-  // transcripts (业绩记录): latest earnings 8-K per 龙头 from SEC EDGAR.
+  // transcripts (业绩记录): latest earnings-CALL transcript per 龙头 from The
+  // Motley Fool (full prepared remarks + Q&A, free). Replaces the old 8-K filing.
   // Standing read-queue — not gated by the lookback window.
   try {
     const earningsCfg = JSON.parse(await readFile(join(ROOT, "src", "data", "earnings.json"), "utf8"));
-    const perCompany = Number(process.env.EARNINGS_PER_CO || earningsCfg.perCompany || 1);
-    const got = await fetchEarnings(earningsCfg.companies, perCompany);
-    console.log(`  edgar: ${got.length} earnings filing(s) across ${earningsCfg.companies.length} 龙头`);
+    const got = await fetchTranscripts(earningsCfg.companies);
+    console.log(`  transcripts: ${got.length} earnings-call transcript(s) across ${earningsCfg.companies.length} 龙头 (Motley Fool)`);
     items.push(...got);
-    if (!got.length) notes.push("transcripts: EDGAR returned 0 (check SEC availability / User-Agent)");
+    if (!got.length) notes.push("transcripts: Motley Fool discovery returned 0 (sitemap unavailable / no recent calls)");
   } catch (err) {
-    const msg = `transcripts (EDGAR) failed: ${err.message}`;
+    const msg = `transcripts (Motley Fool) failed: ${err.message}`;
     console.warn(`  ! ${msg}`);
     notes.push(msg);
   }

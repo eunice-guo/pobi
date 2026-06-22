@@ -1,5 +1,5 @@
 {
-  "_comment": "破壁 / GlobalInfo — 论文 channel (常驻精选, not lookback-gated). World-model reading list sourced from the 'Saturday Robotics & World Models Reading Club' (SF, hosted by Junfan Zhu & Aurora Feng on Luma). These are the canonical 'Learning to Dream' world-model papers (Reading Club #07), each linked to its arXiv original — 永远链接原文, 绝不编造. The builder (scripts/lib/curated.mjs) turns each into a link-style read-queue item; all are seeded into 待读清单. date = the paper's arXiv month. summaryZh is a faithful editorial note. Source: https://luma.com/srhe0vuo",
+  "_comment": "破壁 / GlobalInfo — 论文 channel (常驻精选, not lookback-gated). Reading lists from the 'Saturday Robotics & World Models Reading Club' (SF, host Junfan Zhu / @saturdayrobotic, https://luma.com/saturdayrobotic). Covers the Dreamer-series review (Club 07) plus per-session selections (Clubs 05/08/10/12/13/17). Every entry links its arXiv/publisher original — 永远链接原文, 绝不编造; all links verified to resolve. The builder (scripts/lib/curated.mjs) turns each into a link-style read-queue item seeded into 待读清单. date = the paper's arXiv month (YYMM). summaryZh is a faithful, title-derived editorial note (authors left blank rather than invented).",
   "papers": [
     {
       "id": "wm-ha-schmidhuber-2018",
@@ -99,6 +99,260 @@
       "sectors": ["WORLD-MODEL", "ROBOTICS", "AI-RESEARCH"],
       "summaryZh": "可扩展世界模型中的智能体训练（Dreamer 4）：把世界模型扩展到更大规模、更复杂的环境，朝「面向控制的基础模型」迈进，让智能体几乎完全在想象出的世界里学习复杂任务。世界模型走向规模化的最新一步。",
       "descEn": "Training Agents Inside of Scalable World Models (Dreamer 4): scales world models to larger, more complex environments toward a 'foundation model for control', letting agents learn complex tasks almost entirely inside an imagined world. The latest step in scaling up world models."
+    },
+
+    {
+      "id": "sr05-paths-value-learning",
+      "venue": "Distill 2019 · Saturday Robotics Club 05",
+      "authors": "",
+      "title": "A Paths Perspective on Value Learning（价值学习的路径视角）",
+      "url": "https://distill.pub/2019/paths-perspective-on-value-learning/",
+      "date": "2019-08-01",
+      "sectors": ["AI-RESEARCH", "WORLD-MODEL"],
+      "summaryZh": "Saturday Robotics 世界模型读书会 Club 05 选读（Meta FAIR 主讲「面向物理智能的世界模型」）。Distill 经典可视化长文，用「路径」视角直观解释强化学习中价值函数的学习与传播过程。理解基于模型的规划与价值学习的入门读物。",
+      "descEn": "Reading Club 05 selection. A Distill visual explainer that uses a 'paths' perspective to build intuition for how value functions are learned and propagated in reinforcement learning."
+    },
+    {
+      "id": "sr08-egomimic-2410",
+      "venue": "arXiv · Saturday Robotics Club 08/13",
+      "authors": "",
+      "title": "EgoMimic：从第一人称人类视频学习灵巧操作",
+      "url": "https://arxiv.org/abs/2410.24221",
+      "date": "2024-10-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Saturday Robotics 读书会 Club 08「具身人类数据：动作与行为的互联网」选读。研究如何把第一人称（egocentric）人类视频作为大规模数据，迁移到机器人灵巧操作策略学习。具身智能「用人类数据训机器人」路线的代表工作。",
+      "descEn": "Reading Club 08 selection — Learning Dexterous Manipulation from Egocentric Human Videos (a.k.a. EgoMimic): using first-person human video as scalable data for robot manipulation policies."
+    },
+    {
+      "id": "sr08-egobridge-2509",
+      "venue": "arXiv · Saturday Robotics Club 08/13",
+      "authors": "",
+      "title": "EgoBridge：用人类行为先验扩展机器人学习",
+      "url": "https://arxiv.org/abs/2509.19626",
+      "date": "2025-09-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 08 选读。Scaling Robot Learning with Human Behavior Priors（EgoBridge）：以人类行为作为先验，扩展机器人策略的数据规模与泛化能力。",
+      "descEn": "Reading Club 08 selection — Scaling Robot Learning with Human Behavior Priors (EgoBridge)."
+    },
+    {
+      "id": "sr08-emma-2509",
+      "venue": "arXiv · Saturday Robotics Club 08/13",
+      "authors": "",
+      "title": "EMMA：基于表征对齐的跨形态策略学习",
+      "url": "https://arxiv.org/abs/2509.04443",
+      "date": "2025-09-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 08 选读。Cross-Embodiment Policy Learning via Representation Alignment（EMMA）：通过表征对齐实现跨不同机器人形态（cross-embodiment）的策略迁移。",
+      "descEn": "Reading Club 08 selection — Cross-Embodiment Policy Learning via Representation Alignment (EMMA)."
+    },
+    {
+      "id": "sr08-corobot-codesign-2512",
+      "venue": "arXiv · Saturday Robotics Club 08",
+      "authors": "",
+      "title": "面向可扩展数据采集的人机协同设计",
+      "url": "https://arxiv.org/abs/2512.22414",
+      "date": "2025-12-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 08 选读。Human-Robot Co-Design for Scalable Data Collection：从人机协同设计的角度，提升机器人示范数据采集的可扩展性。",
+      "descEn": "Reading Club 08 selection — Human-Robot Co-Design for Scalable Data Collection."
+    },
+    {
+      "id": "sr08-wm-human-experience-2602",
+      "venue": "arXiv · Saturday Robotics Club 08",
+      "authors": "",
+      "title": "World Models from Human Experience（从人类经验中学习世界模型）",
+      "url": "https://arxiv.org/abs/2602.16710",
+      "date": "2026-02-01",
+      "sectors": ["WORLD-MODEL", "ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 08 选读。World Models from Human Experience：用人类经验数据学习世界模型，连接具身人类数据与世界模型两条线索。",
+      "descEn": "Reading Club 08 selection — World Models from Human Experience."
+    },
+    {
+      "id": "sr08-ego-exo-2505",
+      "venue": "arXiv · Saturday Robotics Club 08",
+      "authors": "",
+      "title": "Ego-Exo Transfer（第一/第三人称视角迁移）",
+      "url": "https://arxiv.org/abs/2505.21864",
+      "date": "2025-05-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 08 选读。Ego-Exo Transfer：在第一人称（ego）与第三人称（exo）视角之间迁移，缓解人类视频与机器人观测之间的视角鸿沟。",
+      "descEn": "Reading Club 08 selection — Ego-Exo Transfer."
+    },
+    {
+      "id": "sr08-egoverse-2604",
+      "venue": "arXiv · Saturday Robotics Club 08/13",
+      "authors": "",
+      "title": "EgoVerse：面向机器人的互联网级人类动作预训练",
+      "url": "https://arxiv.org/abs/2604.07607",
+      "date": "2026-04-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 08/13 选读。Internet-Scale Human Motion Pretraining for Robotics（EgoVerse）：用互联网级人类动作数据做预训练，为机器人学习提供大规模先验。",
+      "descEn": "Reading Club 08/13 selection — Internet-Scale Human Motion Pretraining for Robotics (EgoVerse)."
+    },
+    {
+      "id": "sr08-generalist-from-human-2602",
+      "venue": "arXiv · Saturday Robotics Club 08",
+      "authors": "",
+      "title": "从人类示范中学习通用机器人策略",
+      "url": "https://arxiv.org/abs/2602.06949",
+      "date": "2026-02-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 08 选读。Learning Generalist Robot Policies from Human Demonstrations：从人类示范出发学习通用（generalist）机器人策略。",
+      "descEn": "Reading Club 08 selection — Learning Generalist Robot Policies from Human Demonstrations."
+    },
+    {
+      "id": "sr13-humanego-2605",
+      "venue": "arXiv · Saturday Robotics Club 13",
+      "authors": "",
+      "title": "HumanEgo：用几十分钟人类第一人称视频零样本训练机器人策略",
+      "url": "https://arxiv.org/abs/2605.24934",
+      "date": "2026-05-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 13 主题论文。HumanEgo：仅用 30 分钟左右的人类第一人称视频即可零样本训练出机器人策略（含项目主页与开源代码）。极致的人类数据高效利用样本。",
+      "descEn": "Reading Club 13 keynote paper — HumanEgo: Zero-Shot Robot Learning from Minutes of Human Egocentric Videos. Project: humanego-ai.github.io · Code: github.com/TX-Leo/HumanEgo."
+    },
+    {
+      "id": "sr13-egozero-2505",
+      "venue": "arXiv · Saturday Robotics Club 13",
+      "authors": "",
+      "title": "EgoZero",
+      "url": "https://arxiv.org/abs/2505.20290",
+      "date": "2025-05-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 13「第一人称人类数据训练机器人」选读：EgoZero。",
+      "descEn": "Reading Club 13 selection — EgoZero (egocentric human data for robot learning)."
+    },
+    {
+      "id": "sr13-aina-2511",
+      "venue": "arXiv · Saturday Robotics Club 13",
+      "authors": "",
+      "title": "AINA",
+      "url": "https://arxiv.org/abs/2511.16661",
+      "date": "2025-11-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 13「第一人称人类数据训练机器人」选读：AINA。",
+      "descEn": "Reading Club 13 selection — AINA (egocentric human data for robot learning)."
+    },
+    {
+      "id": "sr13-egovla-2507",
+      "venue": "arXiv · Saturday Robotics Club 13",
+      "authors": "",
+      "title": "EgoVLA：基于第一人称数据的视觉-语言-动作模型",
+      "url": "https://arxiv.org/abs/2507.12440",
+      "date": "2025-07-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 13 选读。EgoVLA：结合第一人称人类数据的视觉-语言-动作（VLA）模型。",
+      "descEn": "Reading Club 13 selection — EgoVLA (egocentric vision-language-action model)."
+    },
+    {
+      "id": "sr10-compliance-control-2603",
+      "venue": "arXiv · Saturday Robotics Club 10",
+      "authors": "",
+      "title": "Minimalist Compliance Control（极简柔顺控制）",
+      "url": "https://arxiv.org/abs/2603.00913",
+      "date": "2026-03-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 10「从身体学习人形本能」选读。Minimalist Compliance Control：以极简方式实现机器人柔顺（compliance）控制，提升接触式操作的安全与鲁棒性。",
+      "descEn": "Reading Club 10 selection — Minimalist Compliance Control."
+    },
+    {
+      "id": "sr10-locomotion-beyond-feet-2601",
+      "venue": "arXiv · Saturday Robotics Club 10",
+      "authors": "",
+      "title": "Locomotion Beyond Feet（超越足部的运动）",
+      "url": "https://arxiv.org/abs/2601.03607",
+      "date": "2026-01-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 10 选读。Locomotion Beyond Feet：探索不止依赖足部的机器人运动方式。",
+      "descEn": "Reading Club 10 selection — Locomotion Beyond Feet."
+    },
+    {
+      "id": "sr10-robot-trains-robot-2508",
+      "venue": "arXiv · Saturday Robotics Club 10",
+      "authors": "",
+      "title": "Robot Trains Robot：人形机器人真实世界自动策略自适应",
+      "url": "https://arxiv.org/abs/2508.12252",
+      "date": "2025-08-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 10 选读。Robot Trains Robot：让机器人在真实世界中自动完成人形策略的适应与学习（robot-trains-robot 范式）。",
+      "descEn": "Reading Club 10 selection — Robot Trains Robot: Automatic Real-World Policy Adaptation and Learning for Humanoids."
+    },
+    {
+      "id": "sr10-toddlerbot-2502",
+      "venue": "arXiv · Saturday Robotics Club 10",
+      "authors": "",
+      "title": "ToddlerBot：开源人形 loco-manipulation 平台",
+      "url": "https://arxiv.org/abs/2502.00893",
+      "date": "2025-02-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 10 选读。ToddlerBot：面向 ML 的开源人形机器人平台，用于运动-操作（loco-manipulation）研究。",
+      "descEn": "Reading Club 10 selection — ToddlerBot: Open-Source ML-Compatible Humanoid Platform for Loco-Manipulation."
+    },
+    {
+      "id": "sr12-pomdar-2604",
+      "venue": "arXiv · Saturday Robotics Club 12",
+      "authors": "",
+      "title": "POMDAR：机器人手灵巧度基准",
+      "url": "https://arxiv.org/abs/2604.09294",
+      "date": "2026-04-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 12「灵巧度——我们需要的基准」选读。POMDAR：面向机器人手灵巧操作的基准与评测。",
+      "descEn": "Reading Club 12 selection — POMDAR (robot-hand dexterity benchmark)."
+    },
+    {
+      "id": "sr12-autoeval-2503",
+      "venue": "arXiv · Saturday Robotics Club 12",
+      "authors": "",
+      "title": "AutoEval：机器人策略的自动评测",
+      "url": "https://arxiv.org/abs/2503.24278",
+      "date": "2025-03-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 12 选读。AutoEval：机器人策略评测方法学，朝自动化、可复现的评测推进。",
+      "descEn": "Reading Club 12 selection — AutoEval (autonomous evaluation methodology for robot policies)."
+    },
+    {
+      "id": "sr17-manifeel-2505",
+      "venue": "arXiv · Saturday Robotics Club 17",
+      "authors": "",
+      "title": "ManiFeel：视触觉操作策略学习基准",
+      "url": "https://arxiv.org/abs/2505.18472",
+      "date": "2025-05-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 17「软触觉为中心的多模态智能」选读。ManiFeel：对视觉-触觉（visuotactile）操作策略学习进行基准测试与理解。",
+      "descEn": "Reading Club 17 selection — ManiFeel: Benchmarking and Understanding Visuotactile Manipulation Policy Learning."
+    },
+    {
+      "id": "sr17-tactile-quadruped-2604",
+      "venue": "arXiv · Saturday Robotics Club 17",
+      "authors": "",
+      "title": "学习具触觉感知的四足 loco-manipulation 策略",
+      "url": "https://arxiv.org/abs/2604.27224",
+      "date": "2026-04-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 17 选读。Learning Tactile-Aware Quadrupedal Loco-Manipulation Policies：让四足机器人结合触觉感知完成运动-操作任务。",
+      "descEn": "Reading Club 17 selection — Learning Tactile-Aware Quadrupedal Loco-Manipulation Policies."
+    },
+    {
+      "id": "sr17-contact-2603",
+      "venue": "arXiv · Saturday Robotics Club 17",
+      "authors": "",
+      "title": "CONTACT：面向机器人拆解的接触感知触觉学习",
+      "url": "https://arxiv.org/abs/2603.08560",
+      "date": "2026-03-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 17 选读。CONTACT：面向机器人拆解（disassembly）任务的接触感知触觉学习。",
+      "descEn": "Reading Club 17 selection — CONTACT: CONtact-aware TACTile Learning for Robotic Disassembly."
+    },
+    {
+      "id": "sr17-vision-tactile-tro-2025",
+      "venue": "IEEE T-RO 2025 · Saturday Robotics Club 17",
+      "authors": "",
+      "title": "面向机械臂的视觉接近觉与触觉感知（IEEE T-RO 2025）",
+      "url": "https://ieeexplore.ieee.org/document/11097357/",
+      "date": "2025-01-01",
+      "sectors": ["ROBOTICS", "AI-RESEARCH"],
+      "summaryZh": "Club 17 选读。Vision-Based Proximity and Tactile Sensing for Robot Arms：机械臂的视觉接近觉与触觉感知的设计、感知与控制（IEEE Transactions on Robotics, 2025）。",
+      "descEn": "Reading Club 17 selection — Vision-Based Proximity and Tactile Sensing for Robot Arms: Design, Perception, and Control (IEEE T-RO, 2025)."
     }
   ]
 }

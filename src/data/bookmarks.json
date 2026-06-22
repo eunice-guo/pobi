@@ -26,6 +26,18 @@
       "descEn": "Andrej Karpathy's free video course: from hand-coding backpropagation (micrograd) all the way to building GPT from scratch (nanoGPT), writing code live while explaining the principles. A classic path from zero to reading frontier-model code, with all companion code open-sourced."
     },
     {
+      "id": "jepa-zoo",
+      "kind": "reference",
+      "source": "Saturday Robotics Club 02",
+      "sourceZh": "JEPA Zoo",
+      "title": "JEPA Zoo — 所有 JEPA 变体可视化",
+      "url": "https://www.jepazoo.com/",
+      "date": "2026-04-04",
+      "sectors": ["WORLD-MODEL", "AI-RESEARCH"],
+      "summaryZh": "Saturday Robotics 世界模型读书会 Club 02（JEPA Zoo / 统一隐空间表征 WAMs）参考资料：把各种 JEPA（联合嵌入预测架构）变体可视化对比的索引站点，并附完整参考文献列表。理解世界模型中 JEPA 路线的速查图谱。",
+      "descEn": "Reading Club 02 reference — JEPA Zoo: a site visualizing and comparing all JEPA (Joint-Embedding Predictive Architecture) variants, with a full reference list. A quick map of the JEPA approach to world models."
+    },
+    {
       "id": "illustrated-transformer",
       "kind": "article",
       "source": "Jay Alammar",
