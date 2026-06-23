@@ -2,6 +2,7 @@
 import Parser from "rss-parser";
 
 const parser = new Parser({ timeout: 15000 });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Strip HTML to plain text but PRESERVE paragraph structure: block-level tags
 // become blank-line breaks and <br> a single newline, so the enricher receives
@@ -62,16 +63,28 @@ async function isYouTubeShort(videoId) {
 // automatically. author = the feed handle, so 来源管理 manages the show and
 // removing it hides all its episodes.
 export async function fetchYouTube(source, max = 6) {
-  const res = await fetch(source.handle, {
-    headers: { "User-Agent": "pobi-globalinfo (eg.eunice.guo@gmail.com)" },
-  });
-  if (!res.ok) throw new Error(`YouTube feed HTTP ${res.status}`);
-  const xml = await res.text();
+  // The Atom feed is the critical request — retry once before giving up so a
+  // transient YouTube 4xx/5xx (rate-limit blip) doesn't blank the whole show.
+  let xml = "";
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const res = await fetch(source.handle, { headers: { "User-Agent": "pobi-globalinfo (eg.eunice.guo@gmail.com)" } });
+    if (res.ok) {
+      xml = await res.text();
+      break;
+    }
+    if (attempt === 2) throw new Error(`YouTube feed HTTP ${res.status}`);
+    await sleep(1500);
+  }
   const items = [];
-  // Scan the whole feed (latest ~15) instead of a fixed head slice: since Shorts
-  // are dropped, keep going until we've collected `max` long-form episodes.
+  // Scan the latest entries instead of a fixed head slice: since Shorts are
+  // dropped, keep going until we've collected `max` long-form episodes. Cap the
+  // scan + throttle the per-video Shorts probes so we don't trip YouTube's bot
+  // protection (which would 4xx the feed itself).
+  let scanned = 0;
   for (const e of xml.split("<entry>").slice(1)) {
-    if (items.length >= max) break;
+    if (items.length >= max || scanned >= 14) break;
+    scanned++;
+    if (scanned > 1) await sleep(350); // gentle pacing between Shorts probes
     const vid = (e.match(/<yt:videoId>([^<]+)<\/yt:videoId>/) || [])[1];
     const title = decodeEntities((e.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || "").trim();
     const link =
