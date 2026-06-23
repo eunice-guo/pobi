@@ -4,6 +4,21 @@ import Parser from "rss-parser";
 const parser = new Parser({ timeout: 15000 });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Some Substacks (e.g. drfeifei, Best Anchor, Klement) 403 the default rss-parser
+// User-Agent from datacenter IPs (GitHub Actions). Fetch the XML ourselves with a
+// real browser UA, then parse the string — this clears the 403s.
+const FEED_UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+async function parseFeedUrl(url) {
+  const res = await fetch(url, {
+    headers: { "User-Agent": FEED_UA, Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml, */*" },
+    redirect: "follow",
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) throw new Error(`Status code ${res.status}`);
+  return parser.parseString(await res.text());
+}
+
 // Strip HTML to plain text but PRESERVE paragraph structure: block-level tags
 // become blank-line breaks and <br> a single newline, so the enricher receives
 // (and can mirror) real paragraphs instead of one unreadable wall of text.
@@ -153,7 +168,7 @@ export async function fetchSubstack(source, sinceMs) {
   // Use the channel the source declares (substack / research / worldmodel …),
   // defaulting to substack. Lets an RSS/Substack feed belong to any channel.
   const channel = source.channel || "substack";
-  const feed = await parser.parseURL(source.handle);
+  const feed = await parseFeedUrl(source.handle);
   const items = [];
   for (const e of feed.items || []) {
     let ts = e.isoDate || e.pubDate || e["dc:date"] || e.date || null;
