@@ -25,7 +25,7 @@ jobs:
           X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
           ENRICH_MODEL: ${{ vars.ENRICH_MODEL }}
           LOOKBACK_HOURS: "168"
-          MAX_ENRICH: "30"
+          MAX_ENRICH: "48"
         run: npm run build:feed
       - name: Commit feed
         run: |

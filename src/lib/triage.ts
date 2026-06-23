@@ -53,13 +53,12 @@ export const CHANNEL_EN: Record<string, string> = {
 };
 
 // Folders (read-state lanes), matching the handoff.
-export type Folder = "today" | "unread" | "starred" | "reading" | "done";
+export type Folder = "today" | "unread" | "starred" | "reading";
 export const FOLDERS: { key: Folder; cn: string; en: string }[] = [
   { key: "today", cn: "今日收件箱", en: "Today" },
   { key: "unread", cn: "未读", en: "Unread" },
   { key: "starred", cn: "已加星", en: "Starred" },
   { key: "reading", cn: "待读清单", en: "Reading" },
-  { key: "done", cn: "读完打卡", en: "Done" },
 ];
 
 export const SECTOR_LABEL: Record<string, string> = {
