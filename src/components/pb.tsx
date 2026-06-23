@@ -2,30 +2,18 @@
 // (reference/shared.jsx). Consume the CSS custom properties in globals.css.
 
 export function PBBrand({ size = 30 }: { size?: number }) {
+  // "The Open Ring" mark: a near-complete circle opened at the top-right with a
+  // seal-red dot flowing out of the gap (破壁 — information crossing the wall).
+  // Per the brand handoff, the ring stroke thickens as it scales down so it stays
+  // legible, and the dot diameter equals the stroke weight (dropped below ~18px).
+  const sw = size <= 16 ? 14 : size <= 24 ? 12 : size <= 40 ? 11 : 9;
+  const showDot = size >= 18;
   return (
     <div style={{ display: "flex", alignItems: "center", gap: size * 0.34 }}>
-      <div
-        style={{
-          width: size,
-          height: size,
-          borderRadius: size * 0.2,
-          flex: "0 0 auto",
-          background: "var(--seal)",
-          color: "#fff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: "var(--font-serif)",
-          fontWeight: 600,
-          fontSize: size * 0.62,
-          lineHeight: 1,
-          letterSpacing: "-0.02em",
-          boxShadow: "0 1px 0 rgba(0,0,0,0.04)",
-        }}
-        aria-hidden
-      >
-        破
-      </div>
+      <svg width={size} height={size} viewBox="12 12 76 76" fill="none" style={{ flex: "0 0 auto" }} aria-hidden>
+        <path d="M71 27 A30 30 0 1 0 80 50" fill="none" stroke="var(--ink)" strokeWidth={sw} strokeLinecap="round" />
+        {showDot && <circle cx="75.5" cy="38.5" r={sw / 2} fill="var(--seal)" />}
+      </svg>
       <div style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
         <span style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: size * 0.6, color: "var(--ink)", letterSpacing: "0.02em" }}>
           破壁
