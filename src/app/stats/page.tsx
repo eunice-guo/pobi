@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Feed } from "@/lib/types";
 import { PBBrand, PBAvatar, PBDisclaimer } from "@/components/pb";
-import { computeStats, loadReadStat, loadClickLog, type Stats } from "@/lib/stats";
+import { computeStats, loadReadStat, loadClickLog, READSTAT_KEY, CLICKLOG_KEY, OPENED_KEY, type Stats } from "@/lib/stats";
 
 function loadSet(key: string): Set<string> {
   try {
@@ -73,6 +73,16 @@ export default function StatsPage() {
     const wd = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"][d.getDay()];
     return `习惯打卡 · ${d.getFullYear()} 年 ${d.getMonth() + 1} 月 ${d.getDate()} 日 · ${wd}`;
   }, []);
+
+  const resetStats = () => {
+    if (!window.confirm("确定清空阅读统计吗？\n\n将归零：连续打卡 streak、本周/本月/累计打卡、打卡日历热力图、最常读来源、跳转原文次数。\n\n会保留：你的已读 / 加星 / 待读状态（收件箱不受影响）。\n\n此操作无法撤销。")) return;
+    try {
+      localStorage.removeItem(READSTAT_KEY);
+      localStorage.removeItem(CLICKLOG_KEY);
+      localStorage.removeItem(OPENED_KEY);
+    } catch {}
+    window.location.reload();
+  };
 
   const R = 54;
   const C = 2 * Math.PI * R;
@@ -356,7 +366,23 @@ export default function StatsPage() {
           </div>
         </Card>
 
-        <div style={{ marginTop: 28, display: "flex", justifyContent: "center" }}>
+        <div style={{ marginTop: 28, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+          <button
+            onClick={resetStats}
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 12,
+              letterSpacing: "0.04em",
+              color: "var(--muted)",
+              background: "transparent",
+              border: "1px solid var(--line)",
+              borderRadius: 999,
+              padding: "8px 18px",
+              cursor: "pointer",
+            }}
+          >
+            清空阅读统计
+          </button>
           <PBDisclaimer />
         </div>
       </div>
