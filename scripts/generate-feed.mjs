@@ -58,20 +58,35 @@ async function main() {
     }
   }
 
-  // 世界模型 (worldmodel): scraped research-lab blogs (World Labs / 李飞飞).
-  // Standing queue — NOT lookback-gated — so the low-volume channel always shows
-  // the latest posts (like 论文/播客).
+  // 世界模型 (worldmodel): research-lab world-model sources. Standing queue —
+  // NOT lookback-gated — so the low-volume channel always shows the latest posts
+  // (like 论文/播客). Each source uses the right ingester: an RSS/Substack feed
+  // (e.g. 李飞飞's drfeifei.substack.com) → fetchSubstack(…, 0) (no gating);
+  // World Labs (no RSS) → scraped via fetchWorldLabs.
   const worldSources = sources.filter((s) => s.channel === "worldmodel");
+  const worldItems = [];
   for (const s of worldSources) {
     try {
-      const got = await fetchWorldLabs(s);
+      const isRss = /substack\.com|\/feed\/?$|\/rss\/?$/.test(s.handle);
+      const got = isRss ? await fetchSubstack(s, 0) : await fetchWorldLabs(s);
       console.log(`  worldmodel ${s.displayName}: ${got.length} post(s)`);
-      items.push(...got);
+      worldItems.push(...got);
     } catch (err) {
       const msg = `worldmodel ${s.displayName} failed: ${err.message}`;
       console.warn(`  ! ${msg}`);
       notes.push(msg);
     }
+  }
+  // De-dup posts that appear on more than one world-model source (e.g. the same
+  // essay on both World Labs and 李飞飞's Substack) by normalized title, keeping
+  // the first (source order in sources.json).
+  const seenWorldTitle = new Set();
+  for (const it of worldItems) {
+    const key = (it.title || "").toLowerCase().replace(/\s+/g, " ").trim();
+    if (/^coming soon\.?$/i.test(key)) continue; // Substack placeholder stub
+    if (key && seenWorldTitle.has(key)) continue;
+    if (key) seenWorldTitle.add(key);
+    items.push(it);
   }
 
   const xSources = sources.filter((s) => s.channel === "x");

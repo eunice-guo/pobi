@@ -29,6 +29,7 @@
     { "handle": "https://aswathdamodaran.blogspot.com/feeds/posts/default?alt=rss", "displayName": "Musings on Markets · Damodaran", "channel": "substack", "priority": "P2", "sectors": ["MACRO", "QUALITY"], "enabled": true },
 
     { "handle": "https://www.worldlabs.ai/blog", "displayName": "World Labs · 李飞飞（空间智能 / 世界模型）", "channel": "worldmodel", "priority": "P0", "sectors": ["WORLD-MODEL", "AI-RESEARCH"], "enabled": true },
+    { "handle": "https://drfeifei.substack.com/feed", "displayName": "Dr. Fei-Fei Li · 李飞飞（个人 Substack）", "channel": "worldmodel", "priority": "P0", "sectors": ["WORLD-MODEL", "AI-RESEARCH"], "enabled": true },
 
     { "handle": "https://www.apolloacademy.com/feed/", "displayName": "Torsten Slok · Apollo（The Daily Spark）", "channel": "research", "priority": "P0", "sectors": ["MACRO", "ASSET-MGR"], "enabled": true },
     { "handle": "https://awealthofcommonsense.com/feed/", "displayName": "Ben Carlson · 常识财富（Ritholtz Wealth）", "channel": "research", "priority": "P1", "sectors": ["ASSET-MGR", "EQUITY", "MACRO"], "enabled": true },

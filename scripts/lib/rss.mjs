@@ -150,7 +150,9 @@ async function fetchPageDate(url) {
 // Handles both the "substack" and "research" (资管观点) channels — same mechanics,
 // the channel is taken from the source so the app can filter them apart.
 export async function fetchSubstack(source, sinceMs) {
-  const channel = source.channel === "research" ? "research" : "substack";
+  // Use the channel the source declares (substack / research / worldmodel …),
+  // defaulting to substack. Lets an RSS/Substack feed belong to any channel.
+  const channel = source.channel || "substack";
   const feed = await parser.parseURL(source.handle);
   const items = [];
   for (const e of feed.items || []) {
