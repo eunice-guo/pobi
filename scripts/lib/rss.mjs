@@ -117,6 +117,34 @@ export async function fetchYouTube(source, max = 6) {
   return items;
 }
 
+// Recover a real publish date for feeds whose RSS omits one (e.g. some WordPress
+// feeds — Apollo Academy ships every item with NO <pubDate>). Fetch the article
+// page and read the Open Graph article:published_time / JSON-LD datePublished.
+// Returns an ISO string or null. Callers must NOT fall back to "now": that
+// mislabels old posts as 今日 AND lets them slip past the lookback window
+// (a dateless item evades a `when < sinceMs` check), which is exactly the bug
+// that surfaced an 11-day-old Apollo post as today.
+async function fetchPageDate(url) {
+  if (!url) return null;
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (pobi-globalinfo; +eg.eunice.guo@gmail.com)" },
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const m =
+      html.match(/property=["']article:published_time["'][^>]*content=["']([^"']+)/i) ||
+      html.match(/content=["']([^"']+)["'][^>]*property=["']article:published_time/i) ||
+      html.match(/"datePublished"\s*:\s*"([^"]+)"/i);
+    if (!m) return null;
+    const d = new Date(m[1]);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+  } catch {
+    return null;
+  }
+}
+
 // Fetch one RSS source, return FeedItem-shaped objects (pre-enrichment) within lookback window.
 // Handles both the "substack" and "research" (资管观点) channels — same mechanics,
 // the channel is taken from the source so the app can filter them apart.
@@ -125,9 +153,15 @@ export async function fetchSubstack(source, sinceMs) {
   const feed = await parser.parseURL(source.handle);
   const items = [];
   for (const e of feed.items || []) {
-    const ts = e.isoDate || e.pubDate;
-    const when = ts ? new Date(ts).getTime() : 0;
-    if (sinceMs && when && when < sinceMs) continue;
+    let ts = e.isoDate || e.pubDate || e["dc:date"] || e.date || null;
+    // Feed omitted a date → recover the real one from the article page rather
+    // than fabricating "now". If it's still unknown, SKIP the item: we'd rather
+    // drop one post than mislabel an old one as today and leak it past lookback.
+    if (!ts && e.link) ts = await fetchPageDate(e.link);
+    if (!ts) continue;
+    const when = new Date(ts).getTime();
+    if (!when) continue;
+    if (sinceMs && when < sinceMs) continue;
     const text = toText(e["content:encoded"] || e.content || e.contentSnippet || e.summary || "");
     if (!text) continue;
     items.push({
@@ -136,7 +170,7 @@ export async function fetchSubstack(source, sinceMs) {
       author: source.handle,
       authorName: source.displayName,
       url: e.link,
-      publishedAt: ts ? new Date(ts).toISOString() : new Date().toISOString(),
+      publishedAt: new Date(ts).toISOString(),
       lang: "en",
       title: e.title || null,
       textEn: text,
