@@ -75,11 +75,12 @@ export default function StatsPage() {
   }, []);
 
   const resetStats = () => {
-    if (!window.confirm("确定清空阅读统计吗？\n\n将归零：连续打卡 streak、本周/本月/累计打卡、打卡日历热力图、最常读来源、跳转原文次数。\n\n会保留：你的已读 / 加星 / 待读状态（收件箱不受影响）。\n\n此操作无法撤销。")) return;
+    if (!window.confirm("确定清空阅读统计吗？\n\n将归零：连续打卡 streak、本周/本月/累计打卡、打卡日历热力图、最常读来源、跳转原文次数，以及已读 / 点开 篇数。\n\n注意：收件箱里所有文章会变回“未读”。\n\n会保留：你的加星 / 待读。\n\n此操作无法撤销。")) return;
     try {
       localStorage.removeItem(READSTAT_KEY);
       localStorage.removeItem(CLICKLOG_KEY);
       localStorage.removeItem(OPENED_KEY);
+      localStorage.removeItem("pobi.readIds");
     } catch {}
     window.location.reload();
   };
