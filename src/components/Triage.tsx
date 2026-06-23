@@ -236,8 +236,9 @@ function ReaderArticle({
   const effShowEn = showEn || !vm.bodyCn;
   const catLabel = vm.item.sectors[0] ? SECTOR_LABEL[vm.item.sectors[0]] ?? vm.item.sectors[0] : null;
   const meta = [vm.platform, catLabel, fullDateLabel(vm.item.publishedAt), `约 ${vm.readMins} 分钟`].filter(Boolean).join(" · ");
+  // fill the reading pane (no narrow 620 cap) so there's no dead space on the right
   return (
-    <div style={{ maxWidth: mobile ? "none" : 620 }}>
+    <div style={{ maxWidth: "none" }}>
       <header style={{ display: "flex", alignItems: "center", gap: mobile ? 11 : 12, marginBottom: mobile ? 18 : 22 }}>
         <PBAvatar initials={vm.initials} tint={vm.tint} size={mobile ? 40 : 42} />
         <div style={{ minWidth: 0 }}>
@@ -349,6 +350,9 @@ export default function Triage() {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [disabledSources, setDisabledSources] = useState<Set<string>>(new Set());
   const [renames, setRenames] = useState<Record<string, string>>({});
+  // snapshot of unread ids taken when entering 未读 — keeps just-read rows in view
+  // for the session (like an email inbox) instead of vanishing them on click.
+  const [unreadSnap, setUnreadSnap] = useState<Set<string> | null>(null);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const mobileRootRef = useRef<HTMLDivElement>(null);
@@ -419,7 +423,9 @@ export default function Triage() {
     (f: Folder, c: Channel | null, dis: Set<string>) => {
       let arr = vms.filter((v) => {
         if (f === "today") return !dis.has(v.id);
-        if (f === "unread") return !read.has(v.id) && !dis.has(v.id);
+        // 未读: while inside the folder, show the snapshot (read rows stay, dimmed)
+        // so the list doesn't collapse as you click; falls back to live !read.
+        if (f === "unread") return (unreadSnap ? unreadSnap.has(v.id) : !read.has(v.id)) && !dis.has(v.id);
         if (f === "starred") return star.has(v.id);
         if (f === "reading") return save.has(v.id);
         return true;
@@ -427,9 +433,19 @@ export default function Triage() {
       if (c) arr = arr.filter((v) => v.channel === c);
       return arr;
     },
-    [vms, read, star, save]
+    [vms, read, star, save, unreadSnap]
   );
   const visible = useMemo(() => visibleFor(folder, cat, dismissed), [visibleFor, folder, cat, dismissed]);
+
+  // snapshot the unread set on entering 未读; clear it on leaving (re-entry refreshes)
+  useEffect(() => {
+    if (folder !== "unread") {
+      setUnreadSnap(null);
+      return;
+    }
+    setUnreadSnap(new Set(vms.filter((v) => !read.has(v.id) && !dismissed.has(v.id)).map((v) => v.id)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [folder]);
 
   // keep a valid selection within the current view (drives the desktop pane)
   useEffect(() => {

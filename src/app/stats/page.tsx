@@ -38,14 +38,34 @@ export default function StatsPage() {
   const [stats, setStats] = useState<Stats | null>(null);
 
   useEffect(() => {
+    let current: Feed | null = null;
+    // Recompute from localStorage every time — so reads logged in the inbox
+    // show up the moment you return to this page (focus / bfcache restore /
+    // tab re-visible), not only on a hard reload.
+    const recompute = () => {
+      if (!current) return;
+      setStats(computeStats(current.items, loadReadStat(), loadClickLog(), loadSet("pobi.readIds"), loadSet("pobi.starredIds"), loadSet("pobi.savedIds")));
+    };
     fetch("/feed/latest.json")
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then((f: Feed) => {
+        current = f;
         setFeed(f);
-        const s = computeStats(f.items, loadReadStat(), loadClickLog(), loadSet("pobi.readIds"), loadSet("pobi.starredIds"), loadSet("pobi.savedIds"));
-        setStats(s);
+        recompute();
       })
       .catch(() => setFeed({ generatedAt: "", date: "", itemCount: 0, enriched: false, notes: [], items: [] }));
+
+    const onVis = () => {
+      if (!document.hidden) recompute();
+    };
+    window.addEventListener("focus", recompute);
+    window.addEventListener("pageshow", recompute);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("focus", recompute);
+      window.removeEventListener("pageshow", recompute);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, []);
 
   const dateLine = useMemo(() => {
@@ -59,7 +79,7 @@ export default function StatsPage() {
 
   const TopBar = () => (
     <div style={{ borderBottom: "1px solid var(--line)", background: "color-mix(in oklch, var(--paper) 85%, transparent)", position: "sticky", top: 0, zIndex: 10, backdropFilter: "blur(8px)" }}>
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "16px 28px", display: "flex", alignItems: "center", gap: 16 }}>
+      <div style={{ maxWidth: "none", margin: "0", padding: "16px 28px", display: "flex", alignItems: "center", gap: 16 }}>
         <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 5, textDecoration: "none", color: "var(--ink-soft)", fontSize: 13, fontWeight: 500 }}>
           <svg width="9" height="14" viewBox="0 0 9 15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M7.5 1.5L1.5 7.5l6 6" />
@@ -78,7 +98,7 @@ export default function StatsPage() {
     return (
       <div style={{ minHeight: "100dvh", background: "var(--paper)", color: "var(--ink)", fontFamily: "var(--font-sans)" }}>
         <TopBar />
-        <p style={{ maxWidth: 960, margin: "0 auto", padding: "48px 28px", fontFamily: "var(--font-mono)", color: "var(--muted)" }}>加载中…</p>
+        <p style={{ maxWidth: "none", margin: "0", padding: "48px 28px", fontFamily: "var(--font-mono)", color: "var(--muted)" }}>加载中…</p>
       </div>
     );
 
@@ -86,7 +106,7 @@ export default function StatsPage() {
   return (
     <div style={{ minHeight: "100dvh", background: "var(--paper)", color: "var(--ink)", fontFamily: "var(--font-sans)" }}>
       <TopBar />
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "36px 28px 80px" }}>
+      <div style={{ maxWidth: "none", margin: "0", padding: "36px 28px 80px" }}>
         <header style={{ marginBottom: 24 }}>
           <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: 34, margin: 0 }}>阅读统计</h1>
           <div style={{ marginTop: 8, fontSize: 13.5, color: "var(--muted)", fontFamily: "var(--font-mono)" }}>{dateLine}</div>

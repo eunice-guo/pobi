@@ -6,7 +6,6 @@
 //   clicked  — items where the user opened 原文 (pobi.clickLog: per-day)
 //   streak / 打卡 — days with ≥1 read
 import type { FeedItem } from "./types";
-import { localDay } from "./date";
 import { toVM } from "./triage";
 
 export const READSTAT_KEY = "pobi.readStat"; // { 'YYYY-MM-DD': { read, srcs:{key:n} } }
@@ -103,15 +102,6 @@ export function computeStats(
 
   const readOf = (iso: string) => readStat[iso]?.read || 0;
 
-  // received per day from the feed (publish day)
-  const recvByDay: Record<string, number> = {};
-  const recvBySrcDay: Record<string, Record<string, number>> = {};
-  for (const it of feedItems) {
-    const d = localDay(it.publishedAt);
-    recvByDay[d] = (recvByDay[d] || 0) + 1;
-    (recvBySrcDay[d] = recvBySrcDay[d] || {})[it.author] = (recvBySrcDay[d]?.[it.author] || 0) + 1;
-  }
-
   // streak (consecutive days up to today with a read)
   let streak = 0;
   for (let i = 0; ; i++) {
@@ -146,16 +136,12 @@ export function computeStats(
     return { w, done: readOf(isoDay(d)) > 0, future: d > today && isoDay(d) !== todayIso, today: isoDay(d) === todayIso };
   });
   let week7Active = 0;
-  let weekRead = 0;
-  let weekRecv = 0;
   let weekClick = 0;
   for (let i = 0; i <= dow; i++) {
     const d = new Date(monday);
     d.setDate(d.getDate() + i);
     const iso = isoDay(d);
     if (readOf(iso) > 0) week7Active++;
-    weekRead += readOf(iso);
-    weekRecv += recvByDay[iso] || 0;
     weekClick += clickLog[iso] || 0;
   }
 
@@ -232,7 +218,6 @@ export function computeStats(
     if (journal.length >= 6) break;
   }
 
-  const rate = weekRecv ? weekRead / weekRecv : 0;
   const badges = [
     { label: "连续 7 天", done: streak >= 7, prog: Math.min(streak, 7), goal: 7 },
     { label: "连续 30 天", done: streak >= 30, prog: streak, goal: 30 },
@@ -240,18 +225,24 @@ export function computeStats(
     { label: "累计百日", done: daysActiveAll >= 100, prog: daysActiveAll, goal: 100 },
   ];
 
+  // Completion = of THIS source's items currently in the feed (what arrived),
+  // how many you've marked read. Keys off readIds so it updates the instant you
+  // read — independent of publish dates (curated/old items would otherwise never
+  // count as "received this week").
   const weeklyFor = (key: string) => {
     let read = 0;
     let recv = 0;
-    for (let i = 0; i <= dow; i++) {
-      const d = new Date(monday);
-      d.setDate(d.getDate() + i);
-      const iso = isoDay(d);
-      read += readStat[iso]?.srcs?.[key] || 0;
-      recv += recvBySrcDay[iso]?.[key] || 0;
+    for (const it of feedItems) {
+      if (it.author !== key) continue;
+      recv++;
+      if (readIds.has(it.id)) read++;
     }
     return { read, recv };
   };
+
+  // Overall 完成率: of everything currently in the inbox, how much is read.
+  const feedTotal = feedItems.length;
+  const feedRead = feedItems.filter((i) => readIds.has(i.id)).length;
 
   return {
     today,
@@ -261,7 +252,7 @@ export function computeStats(
     week7Active,
     month30Active,
     todayRead: readOf(todayIso),
-    week: { received: weekRecv, read: weekRead, clicked: weekClick, backlog: Math.max(0, weekRecv - weekRead), rate },
+    week: { received: feedTotal, read: feedRead, clicked: weekClick, backlog: Math.max(0, feedTotal - feedRead), rate: feedTotal ? feedRead / feedTotal : 0 },
     month: { read: monthRead },
     heatmap: { weeks },
     weekStrip,

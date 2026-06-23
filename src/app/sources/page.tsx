@@ -93,6 +93,7 @@ export default function SourcesPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [form, setForm] = useState<{ open: boolean } & AddDraft>({ open: false, channel: "substack", name: "", en: "", handle: "", sectors: "" });
   const [copied, setCopied] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0); // bumps on focus to re-read localStorage
   const rootRef = useRef<HTMLDivElement>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -108,13 +109,27 @@ export default function SourcesPage() {
       const r = localStorage.getItem(ADDS_KEY);
       if (r) setAdds(JSON.parse(r) as AddDraft[]);
     } catch {}
+    // refresh per-source completion when returning to the page after reading
+    const bump = () => setRefreshTick((t) => t + 1);
+    const onVis = () => {
+      if (!document.hidden) bump();
+    };
+    window.addEventListener("focus", bump);
+    window.addEventListener("pageshow", bump);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("focus", bump);
+      window.removeEventListener("pageshow", bump);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, []);
 
-  // per-source this-week read/received for the completion bars
+  // per-source this-week read/received for the completion bars (recomputed on focus)
   const weeklyFor = useMemo(() => {
     if (!feed) return () => ({ read: 0, recv: 0 });
     return computeStats(feed.items, loadReadStat(), loadClickLog(), loadSet("pobi.readIds"), loadSet("pobi.starredIds"), loadSet("pobi.savedIds")).weeklyFor;
-  }, [feed]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [feed, refreshTick]);
 
   const flash = (msg: string) => {
     setToast(msg);
@@ -287,7 +302,7 @@ export default function SourcesPage() {
     <div ref={rootRef} style={{ minHeight: "100dvh", background: "var(--paper)", color: "var(--ink)", fontFamily: "var(--font-sans)", position: "relative" }}>
       {/* top bar */}
       <div style={{ borderBottom: "1px solid var(--line)", background: "color-mix(in oklch, var(--paper) 85%, transparent)", position: "sticky", top: 0, zIndex: 10, backdropFilter: "blur(8px)" }}>
-        <div style={{ maxWidth: 960, margin: "0 auto", padding: "16px 28px", display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ maxWidth: "none", margin: "0", padding: "16px 28px", display: "flex", alignItems: "center", gap: 16 }}>
           <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 5, textDecoration: "none", color: "var(--ink-soft)", fontSize: 13, fontWeight: 500 }}>
             <svg width="9" height="14" viewBox="0 0 9 15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M7.5 1.5L1.5 7.5l6 6" />
@@ -306,7 +321,7 @@ export default function SourcesPage() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 960, margin: "0 auto", padding: "36px 28px 80px" }}>
+      <div style={{ maxWidth: "none", margin: "0", padding: "36px 28px 80px" }}>
         <header style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 26, gap: 16, flexWrap: "wrap" }}>
           <div>
             <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: 34, margin: 0 }}>来源管理</h1>
