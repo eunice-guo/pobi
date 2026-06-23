@@ -8,8 +8,9 @@
 import type { FeedItem } from "./types";
 import { toVM } from "./triage";
 
-export const READSTAT_KEY = "pobi.readStat"; // { 'YYYY-MM-DD': { read, srcs:{key:n} } }
-export const CLICKLOG_KEY = "pobi.clickLog"; // { 'YYYY-MM-DD': count }
+export const READSTAT_KEY = "pobi.readStat"; // { 'YYYY-MM-DD': { read, srcs:{key:n} } } — only 确认读完
+export const CLICKLOG_KEY = "pobi.clickLog"; // { 'YYYY-MM-DD': count } — 原文 ↗ opens (深读)
+export const OPENED_KEY = "pobi.openedIds"; // item ids opened in-app (点开, ≠ 读完)
 
 export type DayStat = { read: number; srcs: Record<string, number> };
 export type ReadStat = Record<string, DayStat>;
@@ -40,7 +41,7 @@ export interface Stats {
   week7Active: number; // 打卡 days this calendar week
   month30Active: number; // active days in last 30
   todayRead: number;
-  week: { received: number; read: number; clicked: number; backlog: number; rate: number };
+  week: { received: number; opened: number; read: number; clicked: number; backlog: number; rate: number };
   month: { read: number };
   heatmap: { weeks: { cells: { key: string; count: number; future: boolean; level: number }[]; monthLabel: string }[] };
   weekStrip: { w: string; done: boolean; future: boolean; today: boolean }[];
@@ -94,6 +95,7 @@ export function computeStats(
   readStat: ReadStat,
   clickLog: ClickLog,
   readIds: Set<string>,
+  openedIds: Set<string>,
   starred: Set<string>,
   saved: Set<string>
 ): Stats {
@@ -240,9 +242,11 @@ export function computeStats(
     return { read, recv };
   };
 
-  // Overall 完成率: of everything currently in the inbox, how much is read.
+  // Overall funnel: of everything in the inbox — how much opened (点开) vs
+  // actually finished (确认读完). Opening alone is NOT 读完.
   const feedTotal = feedItems.length;
   const feedRead = feedItems.filter((i) => readIds.has(i.id)).length;
+  const feedOpened = feedItems.filter((i) => openedIds.has(i.id)).length;
 
   return {
     today,
@@ -252,7 +256,7 @@ export function computeStats(
     week7Active,
     month30Active,
     todayRead: readOf(todayIso),
-    week: { received: feedTotal, read: feedRead, clicked: weekClick, backlog: Math.max(0, feedTotal - feedRead), rate: feedTotal ? feedRead / feedTotal : 0 },
+    week: { received: feedTotal, opened: feedOpened, read: feedRead, clicked: weekClick, backlog: Math.max(0, feedTotal - feedRead), rate: feedTotal ? feedRead / feedTotal : 0 },
     month: { read: monthRead },
     heatmap: { weeks },
     weekStrip,

@@ -44,7 +44,7 @@ export default function StatsPage() {
     // tab re-visible), not only on a hard reload.
     const recompute = () => {
       if (!current) return;
-      setStats(computeStats(current.items, loadReadStat(), loadClickLog(), loadSet("pobi.readIds"), loadSet("pobi.starredIds"), loadSet("pobi.savedIds")));
+      setStats(computeStats(current.items, loadReadStat(), loadClickLog(), loadSet("pobi.readIds"), loadSet("pobi.openedIds"), loadSet("pobi.starredIds"), loadSet("pobi.savedIds")));
     };
     fetch("/feed/latest.json")
       .then((r) => (r.ok ? r.json() : Promise.reject()))
@@ -197,10 +197,11 @@ export default function StatsPage() {
               </div>
             </div>
             <div>
-              <Eyebrow>本周处理</Eyebrow>
+              <Eyebrow>收件箱处理</Eyebrow>
               <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 9 }}>
                 {[
                   { k: "收到", v: s.week.received, c: "var(--line-strong)" },
+                  { k: "点开", v: s.week.opened, c: "var(--faint)" },
                   { k: "读完", v: s.week.read, c: "var(--seal)" },
                   { k: "待清", v: s.week.backlog, c: "var(--muted)" },
                 ].map((x, i) => (

@@ -5,7 +5,7 @@ import type { Channel, Feed } from "@/lib/types";
 import { dayLabel, fullDateLabel } from "@/lib/date";
 import { PBBrand, PBAvatar, PBPlatform, PBDisclaimer } from "./pb";
 import { pobiBurst, pobiCelebrate } from "@/lib/confetti";
-import { logRead, logClick } from "@/lib/stats";
+import { logRead, logClick, OPENED_KEY } from "@/lib/stats";
 import {
   CHANNEL_META,
   CHANNEL_ORDER,
@@ -99,6 +99,7 @@ function ItemRow({
   cn,
   active,
   isRead,
+  isOpened,
   isStarred,
   isTriage,
   hov,
@@ -111,6 +112,7 @@ function ItemRow({
   cn: string;
   active: boolean;
   isRead: boolean;
+  isOpened: boolean;
   isStarred: boolean;
   isTriage: boolean;
   hov: boolean;
@@ -139,13 +141,14 @@ function ItemRow({
       {active && <span style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 2.5, background: "var(--seal)" }} />}
       <div style={{ paddingTop: mobile ? 5 : 4, flex: "0 0 auto" }}>
         <span
+          title={isRead ? "已读完" : isOpened ? "已点开 · 未确认读完" : "未读"}
           style={{
             width: 7,
             height: 7,
             borderRadius: 999,
             display: "block",
-            background: isRead ? "transparent" : "var(--seal)",
-            boxShadow: isRead ? "inset 0 0 0 1px var(--line-strong)" : "none",
+            background: !isRead && !isOpened ? "var(--seal)" : "transparent",
+            boxShadow: isRead ? "inset 0 0 0 1px var(--line-strong)" : isOpened ? "inset 0 0 0 1.5px var(--seal)" : "none",
           }}
         />
       </div>
@@ -345,6 +348,7 @@ export default function Triage() {
   const [mobileView, setMobileView] = useState<"list" | "read">("list");
 
   const [read, setRead] = useState<Set<string>>(new Set());
+  const [opened, setOpened] = useState<Set<string>>(new Set()); // 点开 (≠ 读完)
   const [star, setStar] = useState<Set<string>>(new Set());
   const [save, setSave] = useState<Set<string>>(new Set());
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
@@ -362,6 +366,7 @@ export default function Triage() {
   useEffect(() => {
     // fast first paint from whatever is stored
     setRead(loadSet(READ_KEY));
+    setOpened(loadSet(OPENED_KEY));
     setStar(loadSet(STAR_KEY));
     setSave(loadSet(SAVE_KEY));
     setDismissed(loadSet(DISMISS_KEY));
@@ -391,6 +396,7 @@ export default function Triage() {
           return next;
         };
         prune(READ_KEY);
+        prune(OPENED_KEY);
         prune(STAR_KEY);
         let saved = prune(SAVE_KEY);
         prune(DISMISS_KEY);
@@ -406,6 +412,7 @@ export default function Triage() {
         } catch {}
 
         setRead(loadSet(READ_KEY));
+        setOpened(loadSet(OPENED_KEY));
         setStar(loadSet(STAR_KEY));
         setSave(saved);
         setDismissed(loadSet(DISMISS_KEY));
@@ -489,13 +496,27 @@ export default function Triage() {
   const togStar = tog(setStar, STAR_KEY);
   const togSave = tog(setSave, SAVE_KEY);
 
+  // 点开 ≠ 读完: opening only records that you OPENED the item (a separate
+  // signal); it does NOT mark it read. Only 确认读完 calls markRead.
+  const markOpened = useCallback((id: string) => {
+    try {
+      const cur = new Set<string>(JSON.parse(localStorage.getItem(OPENED_KEY) || "[]"));
+      if (cur.has(id)) return;
+      cur.add(id);
+      localStorage.setItem(OPENED_KEY, JSON.stringify([...cur]));
+      setOpened(cur);
+    } catch {
+      setOpened((o) => (o.has(id) ? o : new Set(o).add(id)));
+    }
+  }, []);
+
   // Desktop: showEn is sticky across selections (matches reference open()).
   const open = useCallback(
     (id: string) => {
       setSel(id);
-      markRead(id);
+      markOpened(id);
     },
-    [markRead]
+    [markOpened]
   );
 
   // 确认读完 (markDone=true) / 移除 (false): drop from triage view, auto-advance, 撒花.
@@ -713,6 +734,7 @@ export default function Triage() {
                   cn={displayCn(vm)}
                   active={vm.id === sel}
                   isRead={read.has(vm.id)}
+                  isOpened={opened.has(vm.id)}
                   isStarred={star.has(vm.id)}
                   isTriage={isTriage}
                   hov={hover === vm.id}
@@ -904,6 +926,7 @@ export default function Triage() {
                     cn={displayCn(vm)}
                     active={false}
                     isRead={read.has(vm.id)}
+                    isOpened={opened.has(vm.id)}
                     isStarred={star.has(vm.id)}
                     isTriage={isTriage}
                     hov={false}

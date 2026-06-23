@@ -127,7 +127,7 @@ export default function SourcesPage() {
   // per-source this-week read/received for the completion bars (recomputed on focus)
   const weeklyFor = useMemo(() => {
     if (!feed) return () => ({ read: 0, recv: 0 });
-    return computeStats(feed.items, loadReadStat(), loadClickLog(), loadSet("pobi.readIds"), loadSet("pobi.starredIds"), loadSet("pobi.savedIds")).weeklyFor;
+    return computeStats(feed.items, loadReadStat(), loadClickLog(), loadSet("pobi.readIds"), loadSet("pobi.openedIds"), loadSet("pobi.starredIds"), loadSet("pobi.savedIds")).weeklyFor;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feed, refreshTick]);
 
