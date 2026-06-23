@@ -91,8 +91,9 @@ export async function fetchYouTube(source, max = 6) {
       (e.match(/<link[^>]*rel="alternate"[^>]*href="([^"]+)"/) || [])[1] ||
       (vid ? `https://www.youtube.com/watch?v=${vid}` : "");
     const published = (e.match(/<published>([^<]+)<\/published>/) || [])[1];
+    const pub = published ? new Date(published) : null;
     const desc = decodeEntities((e.match(/<media:description>([\s\S]*?)<\/media:description>/) || [])[1] || "").trim();
-    if (!title || !link) continue;
+    if (!title || !link || !pub || isNaN(pub.getTime())) continue; // no valid date → skip (never stamp "now")
     if (await isYouTubeShort(vid)) continue; // long-form podcasts only — drop Shorts
     const text = (title + (desc ? "\n\n" + desc : "")).slice(0, 8000);
     items.push({
@@ -101,7 +102,7 @@ export async function fetchYouTube(source, max = 6) {
       author: source.handle,
       authorName: source.displayName,
       url: link,
-      publishedAt: published ? new Date(published).toISOString() : new Date().toISOString(),
+      publishedAt: pub.toISOString(),
       lang: "en",
       title,
       textEn: text,

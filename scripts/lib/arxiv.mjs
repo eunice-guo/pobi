@@ -40,14 +40,15 @@ export async function fetchArxivAuthors(authors, perAuthor = 3) {
         const title = decode((e.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || "");
         const abs = decode((e.match(/<summary>([\s\S]*?)<\/summary>/) || [])[1] || "");
         const published = (e.match(/<published>([^<]+)<\/published>/) || [])[1];
-        if (!title) continue;
+        const pub = published ? new Date(published) : null;
+        if (!title || !pub || isNaN(pub.getTime())) continue; // no valid date → skip (never stamp "now")
         out.push({
           id: `paper:${arxivId}`,
           channel: "paper",
           author: a.name, // groups under the author subscription
           authorName: a.displayName || a.name,
           url: `https://arxiv.org/abs/${arxivId}`,
-          publishedAt: published ? new Date(published).toISOString() : new Date().toISOString(),
+          publishedAt: pub.toISOString(),
           lang: "en",
           title,
           textEn: abs ? `${title}\n\n${abs}` : title,

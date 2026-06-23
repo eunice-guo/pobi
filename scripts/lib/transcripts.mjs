@@ -56,6 +56,7 @@ export async function fetchTranscripts(companies, monthsBack = Number(process.en
     matches.sort((a, b) => (dateFromUrl(a) < dateFromUrl(b) ? 1 : -1));
     const url = matches[0];
     const date = dateFromUrl(url);
+    if (!date) continue; // no parseable /YYYY/MM/DD/ in URL → skip (never stamp "now" / Invalid Date)
     // pull a human quarter label from the slug if present (…-q1-2027-…)
     const q = url.match(/-q(\d)-(\d{4})-/i);
     const qLabel = q ? `FY${q[2]} Q${q[1]}` : "";

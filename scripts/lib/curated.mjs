@@ -10,13 +10,19 @@ import { readFile } from "node:fs/promises";
 
 // Turn a curated record into a FeedItem-shaped object.
 function toItem(channel, x, { authorName, textEn }) {
+  const when = new Date(`${x.date}T12:00:00Z`);
+  if (isNaN(when.getTime())) {
+    // Hand-curated data, but never fabricate "now" / emit Invalid Date — skip and flag.
+    console.warn(`  ! curated ${channel} "${x.id}" skipped: invalid/missing date "${x.date}"`);
+    return null;
+  }
   return {
     id: `${channel}:${x.id}`,
     channel,
     author: x.show || x.source || x.id,
     authorName,
     url: x.url,
-    publishedAt: new Date(`${x.date}T12:00:00Z`).toISOString(),
+    publishedAt: when.toISOString(),
     lang: "en",
     title: x.title,
     textEn,
@@ -52,7 +58,8 @@ export async function fetchPodcasts(path) {
           .filter(Boolean)
           .join("\n"),
       })
-    );
+    )
+    .filter(Boolean);
 }
 
 // 收藏: evergreen good articles & courses worth re-reading (CS336, …).
@@ -65,7 +72,8 @@ export async function fetchBookmarks(path) {
         authorName: x.sourceZh || x.source || "收藏",
         textEn: [x.kind ? `Type: ${x.kind}` : null, x.descEn || ""].filter(Boolean).join("\n"),
       })
-    );
+    )
+    .filter(Boolean);
 }
 
 // 论文: a curated reading list of research papers (world models, …). Always
@@ -81,5 +89,6 @@ export async function fetchPapers(path) {
           .filter(Boolean)
           .join("\n"),
       })
-    );
+    )
+    .filter(Boolean);
 }

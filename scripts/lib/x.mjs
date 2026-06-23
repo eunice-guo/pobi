@@ -44,6 +44,8 @@ export async function fetchX(sources, token, sinceMs) {
     }
     const tweets = (data.data || []).slice(0, 3); // keep top 3/author
     for (const t of tweets) {
+      const created = t.created_at ? new Date(t.created_at) : null;
+      if (!created || isNaN(created.getTime())) continue; // no valid date → skip (never stamp "now")
       const text = t.note_tweet?.text || t.text || "";
       items.push({
         id: `x:${t.id}`,
@@ -51,7 +53,7 @@ export async function fetchX(sources, token, sinceMs) {
         author: src?.handle || u.username,
         authorName: src?.displayName || `@${u.username}`,
         url: `https://x.com/${u.username}/status/${t.id}`,
-        publishedAt: t.created_at || new Date().toISOString(),
+        publishedAt: created.toISOString(),
         lang: "en",
         title: null,
         textEn: text,
