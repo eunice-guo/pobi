@@ -78,6 +78,7 @@ export const SECTOR_LABEL: Record<string, string> = {
   SHORT: "做空",
   EARNINGS: "业绩",
   "ASSET-MGR": "资管",
+  HUMANITIES: "人文",
 };
 
 // Avatar tints — the reference oklch palette (shared.jsx / option-c-sources.jsx),

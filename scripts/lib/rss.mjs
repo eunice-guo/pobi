@@ -37,11 +37,30 @@ function decodeEntities(s) {
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)));
 }
 
+// YouTube channel Atom feeds interleave Shorts with long-form episodes and carry
+// no duration. A Short *stays* at /shorts/<id> (HTTP 200, no redirect); a long-form
+// video redirects to /watch. Probe with a cheap HEAD and treat "did not redirect"
+// as a Short, so 播客访谈 keeps only long-form video/audio podcasts.
+async function isYouTubeShort(videoId) {
+  if (!videoId) return false;
+  try {
+    const res = await fetch(`https://www.youtube.com/shorts/${videoId}`, {
+      method: "HEAD",
+      redirect: "follow",
+      headers: { "User-Agent": "Mozilla/5.0 (pobi-globalinfo; +eg.eunice.guo@gmail.com)" },
+    });
+    return res.ok && !res.redirected && res.url.includes("/shorts/");
+  } catch {
+    return false; // network hiccup → fail open (keep the item) rather than drop it
+  }
+}
+
 // 播客访谈: a podcast SHOW subscription = its YouTube channel Atom feed
-// (https://www.youtube.com/feeds/videos.xml?channel_id=...). We take the latest
-// `max` episodes (NOT lookback-gated, so the channel stays populated and new
-// episodes surface automatically). author = the feed handle, so 来源管理 manages
-// the show and removing it hides all its episodes.
+// (https://www.youtube.com/feeds/videos.xml?channel_id=...). We keep the latest
+// `max` LONG-FORM episodes — Shorts are filtered out (isYouTubeShort) — and it's
+// NOT lookback-gated, so the channel stays populated and new episodes surface
+// automatically. author = the feed handle, so 来源管理 manages the show and
+// removing it hides all its episodes.
 export async function fetchYouTube(source, max = 6) {
   const res = await fetch(source.handle, {
     headers: { "User-Agent": "pobi-globalinfo (eg.eunice.guo@gmail.com)" },
@@ -49,7 +68,10 @@ export async function fetchYouTube(source, max = 6) {
   if (!res.ok) throw new Error(`YouTube feed HTTP ${res.status}`);
   const xml = await res.text();
   const items = [];
-  for (const e of xml.split("<entry>").slice(1, max + 1)) {
+  // Scan the whole feed (latest ~15) instead of a fixed head slice: since Shorts
+  // are dropped, keep going until we've collected `max` long-form episodes.
+  for (const e of xml.split("<entry>").slice(1)) {
+    if (items.length >= max) break;
     const vid = (e.match(/<yt:videoId>([^<]+)<\/yt:videoId>/) || [])[1];
     const title = decodeEntities((e.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || "").trim();
     const link =
@@ -58,6 +80,7 @@ export async function fetchYouTube(source, max = 6) {
     const published = (e.match(/<published>([^<]+)<\/published>/) || [])[1];
     const desc = decodeEntities((e.match(/<media:description>([\s\S]*?)<\/media:description>/) || [])[1] || "").trim();
     if (!title || !link) continue;
+    if (await isYouTubeShort(vid)) continue; // long-form podcasts only — drop Shorts
     const text = (title + (desc ? "\n\n" + desc : "")).slice(0, 8000);
     items.push({
       id: `podcast:${vid || link}`,

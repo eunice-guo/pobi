@@ -21,6 +21,7 @@ const SECTOR_LABEL: Record<string, string> = {
   SHORT: "做空",
   EARNINGS: "业绩",
   "ASSET-MGR": "资管",
+  HUMANITIES: "人文",
 };
 
 // Per-channel label for the external-source link at the card footer.

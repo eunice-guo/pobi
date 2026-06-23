@@ -13,7 +13,7 @@
 
     { "handle": "https://www.youtube.com/feeds/videos.xml?channel_id=UC5xLV_gJAP9psKcyrJ3ZIcw", "displayName": "WhynotTV · 何泰然（CMU）", "channel": "podcast", "priority": "P1", "sectors": ["AI-RESEARCH", "ROBOTICS"], "enabled": true },
     { "handle": "https://www.youtube.com/feeds/videos.xml?channel_id=UCrkriN4KD36eRfmMaGsgS2g", "displayName": "No Priors · Sarah Guo & Elad Gil", "channel": "podcast", "priority": "P1", "sectors": ["TECH-STRATEGY", "AI-SEMIS"], "enabled": true },
-    { "handle": "https://www.youtube.com/feeds/videos.xml?channel_id=UCXl4i9dYBrFOabk0xGmbkRA", "displayName": "Dwarkesh Patel", "channel": "podcast", "priority": "P1", "sectors": ["AI-RESEARCH", "TECH-STRATEGY"], "enabled": true },
+    { "handle": "https://www.youtube.com/feeds/videos.xml?channel_id=UCXl4i9dYBrFOabk0xGmbkRA", "displayName": "Dwarkesh Patel", "channel": "podcast", "priority": "P1", "sectors": ["AI-RESEARCH", "TECH-STRATEGY", "HUMANITIES"], "enabled": true },
 
     { "handle": "https://www.chinatalk.media/feed", "displayName": "ChinaTalk · Jordan Schneider", "channel": "substack", "priority": "P0", "sectors": ["CHINA-TECH"], "enabled": true },
     { "handle": "https://interconnected.blog/rss/", "displayName": "Interconnected · Kevin Xu", "channel": "substack", "priority": "P0", "sectors": ["CHINA-TECH"], "enabled": true },
