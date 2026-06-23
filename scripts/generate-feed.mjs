@@ -10,6 +10,7 @@ import { fetchSubstack, fetchYouTube } from "./lib/rss.mjs";
 import { fetchX } from "./lib/x.mjs";
 import { fetchTranscripts } from "./lib/transcripts.mjs";
 import { fetchArxivAuthors } from "./lib/arxiv.mjs";
+import { fetchWorldLabs } from "./lib/worldlabs.mjs";
 import { fetchBookmarks, fetchPapers } from "./lib/curated.mjs";
 import { makeEnricher } from "./lib/enrich.mjs";
 
@@ -52,6 +53,22 @@ async function main() {
       items.push(...got);
     } catch (err) {
       const msg = `podcast ${s.displayName} failed: ${err.message}`;
+      console.warn(`  ! ${msg}`);
+      notes.push(msg);
+    }
+  }
+
+  // 世界模型 (worldmodel): scraped research-lab blogs (World Labs / 李飞飞).
+  // Standing queue — NOT lookback-gated — so the low-volume channel always shows
+  // the latest posts (like 论文/播客).
+  const worldSources = sources.filter((s) => s.channel === "worldmodel");
+  for (const s of worldSources) {
+    try {
+      const got = await fetchWorldLabs(s);
+      console.log(`  worldmodel ${s.displayName}: ${got.length} post(s)`);
+      items.push(...got);
+    } catch (err) {
+      const msg = `worldmodel ${s.displayName} failed: ${err.message}`;
       console.warn(`  ! ${msg}`);
       notes.push(msg);
     }
@@ -142,7 +159,7 @@ async function main() {
     // carry faithful Chinese and are skipped. Within each channel, newest first.
     const seen = new Set();
     const queue = [];
-    const order = ["transcript", "research", "podcast", "paper", "substack", "x"];
+    const order = ["transcript", "research", "worldmodel", "podcast", "paper", "substack", "x"];
     const buckets = order.map((ch) => items.filter((i) => i.channel === ch && !i.enriched));
     let progress = true;
     while (queue.length < MAX_ENRICH && progress) {

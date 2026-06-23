@@ -23,6 +23,7 @@ export function sourceKeyOf(item: FeedItem): string {
 export const CHANNEL_META: Record<string, { label: string; seal: boolean }> = {
   transcript: { label: "业绩记录", seal: true },
   research: { label: "资管观点", seal: false },
+  worldmodel: { label: "世界模型", seal: false },
   podcast: { label: "播客访谈", seal: false },
   paper: { label: "论文", seal: false },
   bookmark: { label: "收藏", seal: false },
@@ -34,6 +35,7 @@ export const CHANNEL_META: Record<string, { label: string; seal: boolean }> = {
 export const CHANNEL_ORDER: Channel[] = [
   "transcript",
   "research",
+  "worldmodel",
   "podcast",
   "paper",
   "bookmark",
@@ -45,6 +47,7 @@ export const CHANNEL_ORDER: Channel[] = [
 export const CHANNEL_EN: Record<string, string> = {
   transcript: "Earnings",
   research: "Asset Mgrs",
+  worldmodel: "World Models",
   podcast: "Podcasts",
   paper: "Papers",
   bookmark: "Bookmarks",

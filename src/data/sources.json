@@ -28,6 +28,8 @@
     { "handle": "https://www.generalist.com/feed", "displayName": "The Generalist · Mario Gabriele", "channel": "substack", "priority": "P1", "sectors": ["TECH-STRATEGY"], "enabled": true },
     { "handle": "https://aswathdamodaran.blogspot.com/feeds/posts/default?alt=rss", "displayName": "Musings on Markets · Damodaran", "channel": "substack", "priority": "P2", "sectors": ["MACRO", "QUALITY"], "enabled": true },
 
+    { "handle": "https://www.worldlabs.ai/blog", "displayName": "World Labs · 李飞飞（空间智能 / 世界模型）", "channel": "worldmodel", "priority": "P0", "sectors": ["WORLD-MODEL", "AI-RESEARCH"], "enabled": true },
+
     { "handle": "https://www.apolloacademy.com/feed/", "displayName": "Torsten Slok · Apollo（The Daily Spark）", "channel": "research", "priority": "P0", "sectors": ["MACRO", "ASSET-MGR"], "enabled": true },
     { "handle": "https://awealthofcommonsense.com/feed/", "displayName": "Ben Carlson · 常识财富（Ritholtz Wealth）", "channel": "research", "priority": "P1", "sectors": ["ASSET-MGR", "EQUITY", "MACRO"], "enabled": true },
     { "handle": "https://ritholtz.com/feed/", "displayName": "Barry Ritholtz · 大局观（The Big Picture）", "channel": "research", "priority": "P1", "sectors": ["ASSET-MGR", "MACRO"], "enabled": true },

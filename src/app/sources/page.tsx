@@ -30,7 +30,7 @@ function baseEntries(): Entry[] {
     const ch = s.channel as Channel;
     const tags = (s.sectors || []).join(" / ");
     const sub = ch === "x" ? `@${s.handle}` : ch === "podcast" ? `YouTube · ${tags || "播客"}` : domainOf(s.handle);
-    out.push({ key: s.handle, channel: ch, name: s.displayName, sub, buildEnabled: s.enabled, website: ch === "podcast" || ch === "substack" || ch === "research" ? s.handle.replace(/\/feed\/?$|\/rss\/?$/, "") : undefined });
+    out.push({ key: s.handle, channel: ch, name: s.displayName, sub, buildEnabled: s.enabled, website: ch === "podcast" || ch === "substack" || ch === "research" || ch === "worldmodel" ? s.handle.replace(/\/feed\/?$|\/rss\/?$/, "") : undefined });
   }
   for (const c of earningsCfg.companies as Array<{ ticker: string; name: string; ir?: string }>) {
     out.push({ key: c.ticker, channel: "transcript", name: c.name, sub: `$${c.ticker} · 财报电话会`, buildEnabled: true, website: c.ir });
