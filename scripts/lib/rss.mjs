@@ -161,6 +161,40 @@ async function fetchPageDate(url) {
   }
 }
 
+// Substack publications behind Cloudflare 403 the RSS /feed from datacenter IPs
+// (GitHub Actions) even with a browser UA — but the archive API returns clean
+// JSON. Try direct, then via the jina proxy (which fetches from an allow-listed
+// IP). Returns entries normalized to the same shape as the RSS path, or null if
+// both fail. body_html carries the full post → faithful translation source.
+async function fetchArchiveItems(handle) {
+  let base;
+  try {
+    base = new URL(handle).origin;
+  } catch {
+    return null;
+  }
+  const api = `${base}/api/v1/archive?sort=new&limit=12`;
+  for (const u of [api, `https://r.jina.ai/${api}`]) {
+    try {
+      const res = await fetch(u, { headers: { "User-Agent": FEED_UA, Accept: "application/json, */*" }, signal: AbortSignal.timeout(25000) });
+      if (!res.ok) continue;
+      const json = await res.json();
+      if (Array.isArray(json) && json.length) {
+        return json.map((p) => ({
+          ts: p.post_date || null,
+          link: p.canonical_url,
+          guid: p.canonical_url,
+          title: p.title || null,
+          html: p.body_html || p.truncated_body_text || p.description || "",
+        }));
+      }
+    } catch {
+      /* try next source */
+    }
+  }
+  return null;
+}
+
 // Fetch one RSS source, return FeedItem-shaped objects (pre-enrichment) within lookback window.
 // Handles both the "substack" and "research" (资管观点) channels — same mechanics,
 // the channel is taken from the source so the app can filter them apart.
@@ -168,19 +202,33 @@ export async function fetchSubstack(source, sinceMs) {
   // Use the channel the source declares (substack / research / worldmodel …),
   // defaulting to substack. Lets an RSS/Substack feed belong to any channel.
   const channel = source.channel || "substack";
-  const feed = await parseFeedUrl(source.handle);
+  // Normalize entries to { ts, link, guid, title, html } — from RSS, or (if the
+  // /feed is Cloudflare-blocked) from the Substack archive API.
+  let entries;
+  try {
+    const feed = await parseFeedUrl(source.handle);
+    entries = (feed.items || []).map((e) => ({
+      ts: e.isoDate || e.pubDate || e["dc:date"] || e.date || null,
+      link: e.link,
+      guid: e.guid,
+      title: e.title || null,
+      html: e["content:encoded"] || e.content || e.contentSnippet || e.summary || "",
+    }));
+  } catch (err) {
+    entries = await fetchArchiveItems(source.handle);
+    if (!entries) throw err; // both RSS and archive failed → let the caller note it
+  }
   const items = [];
-  for (const e of feed.items || []) {
-    let ts = e.isoDate || e.pubDate || e["dc:date"] || e.date || null;
-    // Feed omitted a date → recover the real one from the article page rather
-    // than fabricating "now". If it's still unknown, SKIP the item: we'd rather
-    // drop one post than mislabel an old one as today and leak it past lookback.
+  for (const e of entries) {
+    let ts = e.ts;
+    // Date missing → recover from the article page rather than fabricating "now".
+    // Still unknown → SKIP (drop one post rather than mislabel it 今日 / leak past lookback).
     if (!ts && e.link) ts = await fetchPageDate(e.link);
     if (!ts) continue;
     const when = new Date(ts).getTime();
     if (!when) continue;
     if (sinceMs && when < sinceMs) continue;
-    const text = toText(e["content:encoded"] || e.content || e.contentSnippet || e.summary || "");
+    const text = toText(e.html);
     if (!text) continue;
     items.push({
       id: `${channel}:${e.guid || e.link}`,
@@ -190,7 +238,7 @@ export async function fetchSubstack(source, sinceMs) {
       url: e.link,
       publishedAt: new Date(ts).toISOString(),
       lang: "en",
-      title: e.title || null,
+      title: e.title,
       textEn: text,
       summaryZh: null,
       translationZh: null,
