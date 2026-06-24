@@ -28,6 +28,16 @@
     { "handle": "https://www.generalist.com/feed", "displayName": "The Generalist · Mario Gabriele", "channel": "substack", "priority": "P1", "sectors": ["TECH-STRATEGY"], "enabled": true },
     { "handle": "https://aswathdamodaran.blogspot.com/feeds/posts/default?alt=rss", "displayName": "Musings on Markets · Damodaran", "channel": "substack", "priority": "P2", "sectors": ["MACRO", "QUALITY"], "enabled": true },
 
+    { "handle": "https://stratechery.com/feed/", "displayName": "Stratechery · Ben Thompson（科技战略）", "channel": "substack", "priority": "P0", "sectors": ["TECH-STRATEGY"], "enabled": true },
+    { "handle": "https://www.ben-evans.com/benedictevans?format=rss", "displayName": "Benedict Evans · 科技分析", "channel": "substack", "priority": "P1", "sectors": ["TECH-STRATEGY"], "enabled": true },
+    { "handle": "https://importai.substack.com/feed", "displayName": "Import AI · Jack Clark", "channel": "substack", "priority": "P0", "sectors": ["AI-RESEARCH"], "enabled": true },
+    { "handle": "https://tldr.tech/api/rss/ai", "displayName": "TLDR AI · 每日 AI 摘要", "channel": "substack", "priority": "P1", "sectors": ["AI-RESEARCH"], "enabled": true },
+    { "handle": "https://thesequence.substack.com/feed", "displayName": "TheSequence · AI 研究周报", "channel": "substack", "priority": "P1", "sectors": ["AI-RESEARCH"], "enabled": true },
+    { "handle": "https://simonwillison.net/atom/everything/", "displayName": "Simon Willison · LLM / AI 工程", "channel": "substack", "priority": "P1", "sectors": ["AI-RESEARCH"], "enabled": true },
+    { "handle": "https://www.theinformation.com/feed", "displayName": "The Information（disabled: 付费墙、无公开 RSS，待接入抓取）", "channel": "substack", "priority": "P1", "sectors": ["TECH-STRATEGY"], "enabled": false },
+    { "handle": "https://aibreakfast.beehiiv.com/", "displayName": "AI Breakfast（disabled: beehiiv 未开放 RSS，待接入抓取）", "channel": "substack", "priority": "P2", "sectors": ["AI-RESEARCH"], "enabled": false },
+    { "handle": "https://www.theneurondaily.com/", "displayName": "The Neuron（disabled: beehiiv 未开放 RSS，待接入抓取）", "channel": "substack", "priority": "P2", "sectors": ["AI-RESEARCH"], "enabled": false },
+
     { "handle": "https://www.worldlabs.ai/blog", "displayName": "World Labs · 李飞飞（空间智能 / 世界模型）", "channel": "worldmodel", "priority": "P0", "sectors": ["WORLD-MODEL", "AI-RESEARCH"], "enabled": true },
     { "handle": "https://drfeifei.substack.com/feed", "displayName": "Dr. Fei-Fei Li · 李飞飞（个人 Substack）", "channel": "worldmodel", "priority": "P0", "sectors": ["WORLD-MODEL", "AI-RESEARCH"], "enabled": true },
 
