@@ -44,11 +44,18 @@ async function main() {
     }
   }
 
-  // 播客访谈: each podcast SHOW is a YouTube-channel subscription; pull latest eps.
+  // 播客访谈: each podcast SHOW is a subscription. A YouTube channel → its Atom
+  // feed via fetchYouTube (Shorts filtered). A non-YouTube podcast RSS (e.g.
+  // Simplecast/Libsyn) → fetchSubstack with NO lookback gating (like 世界模型) so
+  // a ~weekly show stays populated instead of aging out of the 72h window; keep
+  // the newest 6 so a long back-catalog (Simplecast ships ~100) doesn't flood 播客.
   const podcastSources = sources.filter((s) => s.channel === "podcast");
   for (const s of podcastSources) {
     try {
-      const got = await fetchYouTube(s);
+      const isYouTube = /youtube\.com\/feeds\/videos\.xml/.test(s.handle);
+      const got = isYouTube
+        ? await fetchYouTube(s)
+        : (await fetchSubstack(s, 0)).sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1)).slice(0, 6);
       console.log(`  podcast ${s.displayName}: ${got.length} episode(s)`);
       items.push(...got);
     } catch (err) {

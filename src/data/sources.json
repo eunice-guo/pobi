@@ -14,6 +14,9 @@
     { "handle": "https://www.youtube.com/feeds/videos.xml?channel_id=UC5xLV_gJAP9psKcyrJ3ZIcw", "displayName": "WhynotTV · 何泰然（CMU）", "channel": "podcast", "priority": "P1", "sectors": ["AI-RESEARCH", "ROBOTICS"], "enabled": true },
     { "handle": "https://www.youtube.com/feeds/videos.xml?channel_id=UCrkriN4KD36eRfmMaGsgS2g", "displayName": "No Priors · Sarah Guo & Elad Gil", "channel": "podcast", "priority": "P1", "sectors": ["TECH-STRATEGY", "AI-SEMIS"], "enabled": true },
     { "handle": "https://www.youtube.com/feeds/videos.xml?channel_id=UCXl4i9dYBrFOabk0xGmbkRA", "displayName": "Dwarkesh Patel", "channel": "podcast", "priority": "P1", "sectors": ["AI-RESEARCH", "TECH-STRATEGY", "HUMANITIES"], "enabled": true },
+    { "handle": "https://www.youtube.com/feeds/videos.xml?channel_id=UCSHZKyawb77ixDdsGog4iWA", "displayName": "Lex Fridman Podcast", "channel": "podcast", "priority": "P1", "sectors": ["AI-RESEARCH", "TECH-STRATEGY", "HUMANITIES"], "enabled": true },
+    { "handle": "https://www.youtube.com/feeds/videos.xml?channel_id=UC6t1O76G0jYXOAoYCm153dA", "displayName": "Lenny's Podcast · Lenny Rachitsky（产品 / 增长）", "channel": "podcast", "priority": "P1", "sectors": ["TECH-STRATEGY", "SOFTWARE"], "enabled": true },
+    { "handle": "https://feeds.simplecast.com/dOSE_bdP", "displayName": "Unsupervised Learning · Jacob Effron（Redpoint AI 播客）", "channel": "podcast", "priority": "P1", "sectors": ["AI-RESEARCH", "TECH-STRATEGY"], "enabled": true },
 
     { "handle": "https://www.chinatalk.media/feed", "displayName": "ChinaTalk · Jordan Schneider", "channel": "substack", "priority": "P0", "sectors": ["CHINA-TECH"], "enabled": true },
     { "handle": "https://interconnected.blog/rss/", "displayName": "Interconnected · Kevin Xu", "channel": "substack", "priority": "P0", "sectors": ["CHINA-TECH"], "enabled": true },
@@ -34,6 +37,7 @@
     { "handle": "https://tldr.tech/api/rss/ai", "displayName": "TLDR AI · 每日 AI 摘要", "channel": "substack", "priority": "P1", "sectors": ["AI-RESEARCH"], "enabled": true },
     { "handle": "https://thesequence.substack.com/feed", "displayName": "TheSequence · AI 研究周报", "channel": "substack", "priority": "P1", "sectors": ["AI-RESEARCH"], "enabled": true },
     { "handle": "https://simonwillison.net/atom/everything/", "displayName": "Simon Willison · LLM / AI 工程", "channel": "substack", "priority": "P1", "sectors": ["AI-RESEARCH"], "enabled": true },
+    { "handle": "https://www.oneusefulthing.org/feed", "displayName": "One Useful Thing · Ethan Mollick（AI 实践 / 工作）", "channel": "substack", "priority": "P1", "sectors": ["AI-RESEARCH", "TECH-STRATEGY"], "enabled": true },
     { "handle": "https://www.theinformation.com/feed", "displayName": "The Information（disabled: 付费墙、无公开 RSS，待接入抓取）", "channel": "substack", "priority": "P1", "sectors": ["TECH-STRATEGY"], "enabled": false },
     { "handle": "https://aibreakfast.beehiiv.com/", "displayName": "AI Breakfast（disabled: beehiiv 未开放 RSS，待接入抓取）", "channel": "substack", "priority": "P2", "sectors": ["AI-RESEARCH"], "enabled": false },
     { "handle": "https://www.theneurondaily.com/", "displayName": "The Neuron（disabled: beehiiv 未开放 RSS，待接入抓取）", "channel": "substack", "priority": "P2", "sectors": ["AI-RESEARCH"], "enabled": false },
