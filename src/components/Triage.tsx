@@ -357,9 +357,13 @@ export default function Triage() {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [disabledSources, setDisabledSources] = useState<Set<string>>(new Set());
   const [renames, setRenames] = useState<Record<string, string>>({});
-  // snapshot of unread ids taken when entering 未读 — keeps just-read rows in view
-  // for the session (like an email inbox) instead of vanishing them on click.
-  const [unreadSnap, setUnreadSnap] = useState<Set<string> | null>(null);
+  // The "last visit" boundary that splits 今日收件箱 (new since then) from 收件箱
+  // (older backlog). Captured ONCE at mount from the PREVIOUS lastSeenAt, before
+  // we stamp this visit — so it stays fixed for the session.
+  const [lastSeen, setLastSeen] = useState(0);
+  // snapshot of a triage folder's ids taken when entering it — keeps just-read
+  // rows in view for the session (like an email inbox) instead of vanishing them.
+  const [triageSnap, setTriageSnap] = useState<Set<string> | null>(null);
 
   const rootRef = useRef<HTMLDivElement>(null);
   const mobileRootRef = useRef<HTMLDivElement>(null);
@@ -378,6 +382,11 @@ export default function Triage() {
     try {
       // drop legacy keys from the pre-Option-C build (watchlist/calendar removed)
       ["pobi.watchlist", "pobi.watchlist.seeded"].forEach((k) => localStorage.removeItem(k));
+      // Capture the 今日 boundary ONCE, BEFORE stamping this visit: the previous
+      // visit's timestamp, or — first-ever visit — the last 36h so 今日收件箱 is a
+      // sane fresh slice, not the whole backlog. Fixed for the session.
+      const prev = Number(localStorage.getItem(SEEN_KEY) || 0);
+      setLastSeen(prev > 0 ? prev : Date.now() - 36 * 3600 * 1000);
       localStorage.setItem(SEEN_KEY, String(Date.now()));
     } catch {}
 
@@ -429,33 +438,64 @@ export default function Triage() {
 
   const isTriage = folder === "today" || folder === "unread";
 
+  // Did this item arrive since your last visit? `lastSeen` is the fixed session
+  // boundary captured at mount. Curated evergreen items keep their old publish
+  // dates and so are never "new" — correct, they're a standing queue. An item
+  // with no/invalid date is treated as old (lands in the backlog, never 今日).
+  const isNew = useCallback(
+    (v: TriageVM) => {
+      const t = Date.parse(v.item.publishedAt || "");
+      return Number.isFinite(t) && t > lastSeen;
+    },
+    [lastSeen]
+  );
+  // Live membership (no snapshot) — drives the rail counts.
+  const liveMatch = useCallback(
+    (f: Folder, v: TriageVM, dis: Set<string>) => {
+      if (f === "today") return !read.has(v.id) && !dis.has(v.id) && isNew(v);
+      if (f === "unread") return !read.has(v.id) && !dis.has(v.id) && !isNew(v);
+      if (f === "starred") return star.has(v.id);
+      if (f === "reading") return save.has(v.id);
+      return true;
+    },
+    [read, star, save, isNew]
+  );
+
   const visibleFor = useCallback(
     (f: Folder, c: Channel | null, dis: Set<string>) => {
       let arr = vms.filter((v) => {
-        if (f === "today") return !dis.has(v.id);
-        // 未读: while inside the folder, show the snapshot (read rows stay, dimmed)
-        // so the list doesn't collapse as you click; falls back to live !read.
-        if (f === "unread") return (unreadSnap ? unreadSnap.has(v.id) : !read.has(v.id)) && !dis.has(v.id);
-        if (f === "starred") return star.has(v.id);
-        if (f === "reading") return save.has(v.id);
-        return true;
+        // The active triage folder shows its entry snapshot so read rows stay
+        // (dimmed) instead of the list collapsing as you click; inactive folders
+        // (e.g. for counts) compute live.
+        if ((f === "today" || f === "unread") && f === folder && triageSnap) {
+          return triageSnap.has(v.id) && !dis.has(v.id);
+        }
+        return liveMatch(f, v, dis);
       });
       if (c) arr = arr.filter((v) => v.channel === c);
       return arr;
     },
-    [vms, read, star, save, unreadSnap]
+    [vms, folder, triageSnap, liveMatch]
   );
   const visible = useMemo(() => visibleFor(folder, cat, dismissed), [visibleFor, folder, cat, dismissed]);
 
-  // snapshot the unread set on entering 未读; clear it on leaving (re-entry refreshes)
+  // Snapshot the active triage folder on entry (and once the feed loads). Only
+  // re-runs on folder/feed change — NOT on read — so reading dims rows in place.
   useEffect(() => {
-    if (folder !== "unread") {
-      setUnreadSnap(null);
+    if (folder !== "today" && folder !== "unread") {
+      setTriageSnap(null);
       return;
     }
-    setUnreadSnap(new Set(vms.filter((v) => !read.has(v.id) && !dismissed.has(v.id)).map((v) => v.id)));
+    const wantNew = folder === "today";
+    setTriageSnap(
+      new Set(
+        vms
+          .filter((v) => !read.has(v.id) && !dismissed.has(v.id) && isNew(v) === wantNew)
+          .map((v) => v.id)
+      )
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [folder]);
+  }, [folder, vms]);
 
   // keep a valid selection within the current view (drives the desktop pane)
   useEffect(() => {
@@ -609,15 +649,21 @@ export default function Triage() {
     return () => window.removeEventListener("keydown", onKey);
   });
 
-  // counts
-  const todayCount = useMemo(() => visibleFor("today", null, dismissed).length, [visibleFor, dismissed]);
-  const unreadCount = useMemo(() => vms.filter((v) => !read.has(v.id) && !dismissed.has(v.id)).length, [vms, read, dismissed]);
+  // counts — live (true remaining), so the badges tick down as you read
+  const todayCount = useMemo(() => vms.filter((v) => liveMatch("today", v, dismissed)).length, [vms, liveMatch, dismissed]);
+  const inboxCount = useMemo(() => vms.filter((v) => liveMatch("unread", v, dismissed)).length, [vms, liveMatch, dismissed]);
   const starCount = useMemo(() => vms.filter((v) => star.has(v.id)).length, [vms, star]);
   const saveCount = useMemo(() => vms.filter((v) => save.has(v.id)).length, [vms, save]);
-  const folderCount: Record<Folder, number> = { today: todayCount, unread: unreadCount, starred: starCount, reading: saveCount };
+  const folderCount: Record<Folder, number> = { today: todayCount, unread: inboxCount, starred: starCount, reading: saveCount };
 
   const sourceCount = useMemo(() => new Set(visible.map((v) => displayCn(v))).size, [visible, displayCn]);
   const activeFolder = FOLDERS.find((f) => f.key === folder)!;
+  // empty-state copy depends on which inbox you're in
+  const isToday = folder === "today";
+  const triageEmptyTitle = isToday ? "今日已清空" : "收件箱已清空";
+  const triageEmptyBody = isToday
+    ? `自上次访问后的新内容都已处理完。明早 7 点会有新的更新到达。`
+    : `更早的未读内容都处理完了。`;
   const feedWeekday = feed ? new Date(feed.date + "T12:00:00").toLocaleDateString("zh-CN", { weekday: "long" }) : "";
   const feedDate = feed ? new Date(feed.date + "T12:00:00").toLocaleDateString("zh-CN", { month: "long", day: "numeric" }) : "";
 
@@ -652,7 +698,7 @@ export default function Triage() {
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             {FOLDERS.map((f) => {
               const active = folder === f.key;
-              const accent = f.key === "unread";
+              const accent = f.key === "today";
               return (
                 <button
                   key={f.key}
@@ -773,8 +819,8 @@ export default function Triage() {
           <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
             {visible.length === 0 ? (
               <div style={{ padding: "48px 28px", textAlign: "center", color: "var(--muted)" }}>
-                <div style={{ fontFamily: "var(--font-serif)", fontSize: 16, color: "var(--ink-soft)", marginBottom: 6 }}>{isTriage ? "今日已清空 🎉" : "暂无内容"}</div>
-                <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>{isTriage ? "所有更新都已处理完毕。" : "换个文件夹或分类看看。"}</div>
+                <div style={{ fontFamily: "var(--font-serif)", fontSize: 16, color: "var(--ink-soft)", marginBottom: 6 }}>{isTriage ? `${triageEmptyTitle} 🎉` : "暂无内容"}</div>
+                <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>{isTriage ? triageEmptyBody : "换个文件夹或分类看看。"}</div>
               </div>
             ) : (
               visible.map((vm) => (
@@ -863,10 +909,10 @@ export default function Triage() {
                   <path d="M20 6L9 17l-5-5" />
                 </svg>
               </div>
-              <div style={{ fontFamily: "var(--font-serif)", fontSize: 26, fontWeight: 600, color: "var(--ink)", marginBottom: 8 }}>{isTriage ? "今日已清空" : "暂无内容"}</div>
+              <div style={{ fontFamily: "var(--font-serif)", fontSize: 26, fontWeight: 600, color: "var(--ink)", marginBottom: 8 }}>{isTriage ? triageEmptyTitle : "暂无内容"}</div>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.1em", color: "var(--faint)", textTransform: "uppercase", marginBottom: 18 }}>Inbox Zero</div>
               <div style={{ fontSize: 14, lineHeight: 1.7, color: "var(--muted)", maxWidth: 320 }}>
-                {isTriage ? `今天的 ${doneCount} 篇更新都已处理完。明早 7 点会有新的内容到达。` : "换个文件夹或分类继续浏览。"}
+                {isTriage ? (isToday ? `今天的 ${doneCount} 篇更新都已处理完。明早 7 点会有新的内容到达。` : triageEmptyBody) : "换个文件夹或分类继续浏览。"}
               </div>
               {isTriage && doneCount > 0 && (
                 <button
@@ -878,7 +924,7 @@ export default function Triage() {
                   }}
                   style={{ marginTop: 24, border: "1px solid var(--line)", background: "var(--surface)", borderRadius: 8, padding: "9px 16px", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 12.5, fontWeight: 600, color: "var(--ink-soft)" }}
                 >
-                  重新查看今日
+                  {isToday ? "重新查看今日" : "重新查看收件箱"}
                 </button>
               )}
             </div>
@@ -935,7 +981,7 @@ export default function Triage() {
                 </span>
                 <span style={{ color: "var(--faint)" }}>·</span>
                 <span>
-                  {unreadCount} 条新内容 · {sourceCount} 来源
+                  今日 {todayCount} · 收件箱 {inboxCount} · {sourceCount} 来源
                 </span>
               </div>
             </div>
@@ -977,8 +1023,8 @@ export default function Triage() {
             <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
               {visible.length === 0 ? (
                 <div style={{ padding: "48px 28px", textAlign: "center", color: "var(--muted)" }}>
-                  <div style={{ fontFamily: "var(--font-serif)", fontSize: 16, color: "var(--ink-soft)", marginBottom: 6 }}>{isTriage ? "今日已清空 🎉" : "暂无内容"}</div>
-                  <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>{isTriage ? "所有更新都已处理完毕。" : "换个文件夹或分类看看。"}</div>
+                  <div style={{ fontFamily: "var(--font-serif)", fontSize: 16, color: "var(--ink-soft)", marginBottom: 6 }}>{isTriage ? `${triageEmptyTitle} 🎉` : "暂无内容"}</div>
+                  <div style={{ fontSize: 12.5, lineHeight: 1.6 }}>{isTriage ? triageEmptyBody : "换个文件夹或分类看看。"}</div>
                 </div>
               ) : (
                 visible.map((vm) => (

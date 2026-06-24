@@ -4,7 +4,7 @@ import type { Channel, FeedItem } from "./types";
 
 // Curated channels are managed as individual items; subscription channels
 // (x/substack/research) are managed by their source handle.
-export const CURATED_CHANNELS = new Set<Channel>(["podcast", "bookmark", "paper"]);
+export const CURATED_CHANNELS = new Set<Channel>(["podcast", "bookmark", "paper", "xbookmark"]);
 
 // localStorage keys shared by the /sources manager (writes) and the inbox
 // (reads): disabled source identifiers (hide items live) + display-name renames.
@@ -27,6 +27,7 @@ export const CHANNEL_META: Record<string, { label: string; seal: boolean }> = {
   podcast: { label: "播客访谈", seal: false },
   paper: { label: "论文", seal: false },
   bookmark: { label: "收藏", seal: false },
+  xbookmark: { label: "X 收藏", seal: false },
   substack: { label: "Substack", seal: false },
   x: { label: "X", seal: false },
 };
@@ -39,6 +40,7 @@ export const CHANNEL_ORDER: Channel[] = [
   "podcast",
   "paper",
   "bookmark",
+  "xbookmark",
   "substack",
   "x",
 ];
@@ -51,15 +53,20 @@ export const CHANNEL_EN: Record<string, string> = {
   podcast: "Podcasts",
   paper: "Papers",
   bookmark: "Bookmarks",
+  xbookmark: "X Bookmarks",
   substack: "Substack",
   x: "X",
 };
 
 // Folders (read-state lanes), matching the handoff.
+// "today"  = unread items NEW since your last visit (the daily delivery).
+// "unread" = the regular inbox: unread items from BEFORE your last visit
+//            (the standing backlog). The two partition the unread set with no
+//            overlap — see matchFolder/isNew in Triage.tsx.
 export type Folder = "today" | "unread" | "starred" | "reading";
 export const FOLDERS: { key: Folder; cn: string; en: string }[] = [
   { key: "today", cn: "今日收件箱", en: "Today" },
-  { key: "unread", cn: "未读", en: "Unread" },
+  { key: "unread", cn: "收件箱", en: "Inbox" },
   { key: "starred", cn: "已加星", en: "Starred" },
   { key: "reading", cn: "待读清单", en: "Reading" },
 ];

@@ -1,0 +1,16 @@
+{
+  "_comment": "破壁 / GlobalInfo — X 收藏 channel (常驻精选, not lookback-gated). Your saved tweets from X. Workflow: send Claude the bookmarked tweet links; Claude reads each tweet, records the REAL tweet date (DATE RULE — never fabricate 'now'; if the date can't be recovered, skip the item), the tweet text as 原文 (descEn), and writes a faithful 中文 summary (summaryZh). 绝不编造、永远链接原文、不给买卖建议. The builder (scripts/lib/curated.mjs fetchXBookmarks) turns each into a link-style read-queue item; summaryZh present → ships enriched, the translator skips it.",
+  "_schema": {
+    "id": "stable unique slug, e.g. handle-keyword-date",
+    "source": "tweet author handle WITH @, e.g. @karpathy — this is the subscription key (sourceKeyOf)",
+    "sourceZh": "author display name shown in the list (Chinese name or plain name)",
+    "title": "short 中文 gist of the tweet (tweets have no title; craft a faithful one-line title)",
+    "url": "canonical tweet link https://x.com/<handle>/status/<id>",
+    "date": "real tweet date YYYY-MM-DD — never invent",
+    "sectors": ["e.g. AI-RESEARCH, WORLD-MODEL"],
+    "summaryZh": "faithful Chinese summary of the tweet",
+    "descEn": "the tweet's original English text (原文)",
+    "enabled": "optional; set false to hide without deleting"
+  },
+  "bookmarks": []
+}

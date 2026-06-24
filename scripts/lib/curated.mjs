@@ -76,6 +76,23 @@ export async function fetchBookmarks(path) {
     .filter(Boolean);
 }
 
+// X 收藏: hand-curated saved tweets from X. The user sends bookmarked tweet
+// links; each is recorded with the real tweet date (DATE RULE: never fabricate),
+// a faithful Chinese summary, and the tweet's English text as 原文. Link-style,
+// always points back to the original x.com/… status, 绝不编造.
+export async function fetchXBookmarks(path) {
+  const cfg = JSON.parse(await readFile(path, "utf8"));
+  return (cfg.bookmarks || [])
+    .filter((x) => x.enabled !== false)
+    .map((x) =>
+      toItem("xbookmark", x, {
+        authorName: x.sourceZh || x.source || "X 收藏",
+        textEn: x.descEn || "",
+      })
+    )
+    .filter(Boolean);
+}
+
 // 论文: a curated reading list of research papers (world models, …). Always
 // linked to the arXiv / publisher original. authorName = paper authors.
 export async function fetchPapers(path) {

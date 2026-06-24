@@ -11,7 +11,7 @@ import { fetchX } from "./lib/x.mjs";
 import { fetchTranscripts } from "./lib/transcripts.mjs";
 import { fetchArxivAuthors } from "./lib/arxiv.mjs";
 import { fetchWorldLabs } from "./lib/worldlabs.mjs";
-import { fetchBookmarks, fetchPapers } from "./lib/curated.mjs";
+import { fetchBookmarks, fetchPapers, fetchXBookmarks } from "./lib/curated.mjs";
 import { makeEnricher } from "./lib/enrich.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -163,6 +163,15 @@ async function main() {
     console.warn(`  ! ${msg}`);
     notes.push(msg);
   }
+  try {
+    const got = await fetchXBookmarks(join(ROOT, "src", "data", "xbookmarks.json"));
+    console.log(`  xbookmarks: ${got.length} X 收藏`);
+    items.push(...got);
+  } catch (err) {
+    const msg = `xbookmarks failed: ${err.message}`;
+    console.warn(`  ! ${msg}`);
+    notes.push(msg);
+  }
 
   // newest first
   items.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
@@ -181,7 +190,7 @@ async function main() {
     // carry faithful Chinese and are skipped. Within each channel, newest first.
     const seen = new Set();
     const queue = [];
-    const order = ["transcript", "research", "worldmodel", "podcast", "paper", "substack", "x"];
+    const order = ["transcript", "research", "worldmodel", "podcast", "paper", "xbookmark", "substack", "x"];
     const buckets = order.map((ch) => items.filter((i) => i.channel === ch && !i.enriched));
     let progress = true;
     while (queue.length < MAX_ENRICH && progress) {

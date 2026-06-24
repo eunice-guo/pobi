@@ -83,7 +83,7 @@ function Reader() {
 
       <div className="mt-10 flex flex-wrap items-center gap-5 border-t pt-5 text-sm" style={{ borderColor: "var(--line)" }}>
         <a href={item.url} target="_blank" rel="noopener noreferrer" className="font-medium underline-offset-2 hover:underline" style={{ color: "var(--teal)" }}>
-          {item.channel === "podcast" ? "观看访谈" : item.channel === "bookmark" ? "打开原文" : "阅读英文原文全文"}
+          {item.channel === "podcast" ? "观看访谈" : item.channel === "bookmark" ? "打开原文" : item.channel === "xbookmark" ? "在 X 查看原推" : "阅读英文原文全文"}
           {item.platform ? ` · ${item.platform}` : ""} ↗
         </a>
         {item.altUrl && (
