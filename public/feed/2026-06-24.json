@@ -958,7 +958,9 @@
       "secondHand": true,
       "enriched": true,
       "reportDate": "2026-06-03",
-      "enrichModel": "openai/gpt-oss-120b:free"
+      "enrichModel": "openai/gpt-oss-120b:free",
+      "altUrl": "https://www.youtube.com/results?search_query=Broadcom%20Q2%202026%20earnings%20call",
+      "altPlatform": "▶ 电话会 · YouTube"
     },
     {
       "id": "worldmodel:https://www.worldlabs.ai/blog/taxonomy-of-world-models",
@@ -1003,7 +1005,9 @@
       "secondHand": true,
       "enriched": true,
       "reportDate": "2026-05-20",
-      "enrichModel": "openai/gpt-oss-120b:free"
+      "enrichModel": "openai/gpt-oss-120b:free",
+      "altUrl": "https://www.youtube.com/results?search_query=NVIDIA%20Q1%202027%20earnings%20call",
+      "altPlatform": "▶ 电话会 · YouTube"
     },
     {
       "id": "transcript:amd:2026-05-06",
@@ -1026,7 +1030,9 @@
       "secondHand": true,
       "enriched": true,
       "reportDate": "2026-05-06",
-      "enrichModel": "openai/gpt-oss-120b:free"
+      "enrichModel": "openai/gpt-oss-120b:free",
+      "altUrl": "https://www.youtube.com/results?search_query=AMD%20Q1%202026%20earnings%20call",
+      "altPlatform": "▶ 电话会 · YouTube"
     },
     {
       "id": "paper:sr13-humanego-2605",
@@ -1096,7 +1102,9 @@
       "secondHand": true,
       "enriched": true,
       "reportDate": "2026-04-30",
-      "enrichModel": "openai/gpt-oss-120b:free"
+      "enrichModel": "openai/gpt-oss-120b:free",
+      "altUrl": "https://www.youtube.com/results?search_query=Apple%20Q2%202026%20earnings%20call",
+      "altPlatform": "▶ 电话会 · YouTube"
     },
     {
       "id": "transcript:msft:2026-04-29",
@@ -1119,7 +1127,9 @@
       "secondHand": true,
       "enriched": true,
       "reportDate": "2026-04-29",
-      "enrichModel": "openai/gpt-oss-120b:free"
+      "enrichModel": "openai/gpt-oss-120b:free",
+      "altUrl": "https://www.youtube.com/results?search_query=Microsoft%20Q3%202026%20earnings%20call",
+      "altPlatform": "▶ 电话会 · YouTube"
     },
     {
       "id": "transcript:googl:2026-04-29",
@@ -1142,7 +1152,9 @@
       "secondHand": true,
       "enriched": true,
       "reportDate": "2026-04-29",
-      "enrichModel": "openai/gpt-oss-120b:free"
+      "enrichModel": "openai/gpt-oss-120b:free",
+      "altUrl": "https://www.youtube.com/results?search_query=Alphabet%20Q1%202026%20earnings%20call",
+      "altPlatform": "▶ 电话会 · YouTube"
     },
     {
       "id": "transcript:amzn:2026-04-29",
@@ -1165,7 +1177,9 @@
       "secondHand": true,
       "enriched": true,
       "reportDate": "2026-04-29",
-      "enrichModel": "openai/gpt-oss-120b:free"
+      "enrichModel": "openai/gpt-oss-120b:free",
+      "altUrl": "https://www.youtube.com/results?search_query=Amazon%20Q1%202026%20earnings%20call",
+      "altPlatform": "▶ 电话会 · YouTube"
     },
     {
       "id": "transcript:meta:2026-04-29",
@@ -1188,7 +1202,9 @@
       "secondHand": true,
       "enriched": true,
       "reportDate": "2026-04-29",
-      "enrichModel": "openai/gpt-oss-120b:free"
+      "enrichModel": "openai/gpt-oss-120b:free",
+      "altUrl": "https://www.youtube.com/results?search_query=Meta%20Platforms%20Q1%202026%20earnings%20call",
+      "altPlatform": "▶ 电话会 · YouTube"
     },
     {
       "id": "transcript:tsla:2026-04-22",
@@ -1211,7 +1227,9 @@
       "secondHand": true,
       "enriched": true,
       "reportDate": "2026-04-22",
-      "enrichModel": "openai/gpt-oss-120b:free"
+      "enrichModel": "openai/gpt-oss-120b:free",
+      "altUrl": "https://www.youtube.com/results?search_query=Tesla%20Q3%202024%20earnings%20call",
+      "altPlatform": "▶ 电话会 · YouTube"
     },
     {
       "id": "bookmark:jepa-zoo",

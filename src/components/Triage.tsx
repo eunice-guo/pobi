@@ -1040,6 +1040,16 @@ export default function Triage() {
                     ✓ 确认读完 · 撒花
                   </button>
                 )}
+                {item.altUrl && (
+                  <a
+                    href={item.altUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ width: "100%", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "11px 0", borderRadius: 11, cursor: "pointer", border: "1px solid color-mix(in oklch, var(--seal) 35%, transparent)", background: "color-mix(in oklch, var(--seal) 8%, transparent)", color: "var(--seal)", fontFamily: "var(--font-sans)", fontSize: 12.5, fontWeight: 600, textDecoration: "none" }}
+                  >
+                    {item.altPlatform ?? "镜像"} <span style={{ fontFamily: "var(--font-mono)" }}>↗</span>
+                  </a>
+                )}
                 <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
                   <button
                     type="button"
