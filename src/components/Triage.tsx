@@ -6,6 +6,7 @@ import { dayLabel, fullDateLabel } from "@/lib/date";
 import { PBBrand, PBAvatar, PBPlatform, PBDisclaimer } from "./pb";
 import { pobiBurst, pobiCelebrate } from "@/lib/confetti";
 import { logRead, logClick, OPENED_KEY } from "@/lib/stats";
+import { snapshotFinished } from "@/lib/finished";
 import {
   CHANNEL_META,
   CHANNEL_ORDER,
@@ -349,6 +350,8 @@ export default function Triage() {
 
   const [read, setRead] = useState<Set<string>>(new Set());
   const [opened, setOpened] = useState<Set<string>>(new Set()); // 点开 (≠ 读完)
+  // takeaway capture shown on 确认读完, before 撒花 (null = closed)
+  const [tkModal, setTkModal] = useState<{ id: string; host: HTMLElement | null; text: string; title: string } | null>(null);
   const [star, setStar] = useState<Set<string>>(new Set());
   const [save, setSave] = useState<Set<string>>(new Set());
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
@@ -519,9 +522,10 @@ export default function Triage() {
     [markOpened]
   );
 
-  // 确认读完 (markDone=true) / 移除 (false): drop from triage view, auto-advance, 撒花.
-  const dismiss = useCallback(
-    (id: string, markDone: boolean, host: HTMLElement | null) => {
+  // The actual finish: snapshot into the 读完 store (with optional takeaway),
+  // mark read, drop from triage, auto-advance, 撒花.
+  const finishNow = useCallback(
+    (id: string, host: HTMLElement | null, takeaway: string) => {
       const remaining = visible.filter((v) => v.id !== id);
       if (id === sel) {
         const idx = visible.findIndex((v) => v.id === id);
@@ -533,14 +537,47 @@ export default function Triage() {
         saveSet(DISMISS_KEY, n);
         return n;
       });
-      if (markDone) {
-        markRead(id);
-        setDoneCount((n) => n + 1);
-      }
+      const it = itemsRef.current.find((x) => x.id === id);
+      if (it) snapshotFinished(it, takeaway, new Date().toISOString());
+      markRead(id);
+      setDoneCount((n) => n + 1);
       if (isTriage && remaining.length === 0) requestAnimationFrame(() => pobiCelebrate(host));
       else pobiBurst(host, { originX: 0.78, originY: 0.12, count: 30, power: 10 });
     },
     [visible, sel, isTriage, markRead]
+  );
+
+  // 确认读完 → capture an optional takeaway FIRST (撒花 happens on save/skip).
+  // 移除 (markDone=false) just drops the item: no read, no takeaway, small burst.
+  const dismiss = useCallback(
+    (id: string, markDone: boolean, host: HTMLElement | null) => {
+      if (markDone) {
+        const it = itemsRef.current.find((x) => x.id === id);
+        setTkModal({ id, host, text: "", title: it?.title || it?.textEn.slice(0, 60) || "" });
+        return;
+      }
+      const remaining = visible.filter((v) => v.id !== id);
+      if (id === sel) {
+        const idx = visible.findIndex((v) => v.id === id);
+        const next = remaining[idx] || remaining[idx - 1] || remaining[0] || null;
+        setSel(next ? next.id : null);
+      }
+      setDismissed((d) => {
+        const n = new Set(d).add(id);
+        saveSet(DISMISS_KEY, n);
+        return n;
+      });
+      pobiBurst(host, { originX: 0.78, originY: 0.12, count: 30, power: 10 });
+    },
+    [visible, sel]
+  );
+
+  const closeTakeaway = useCallback(
+    (commit: boolean) => {
+      if (commit && tkModal) finishNow(tkModal.id, tkModal.host, tkModal.text.trim());
+      setTkModal(null);
+    },
+    [tkModal, finishNow]
   );
 
   // keyboard triage (desktop): j/k move · e 确认读完 · s 加星 · x 移除
@@ -683,6 +720,19 @@ export default function Triage() {
             })}
           </div>
           <div style={{ flex: 1 }} />
+          <Link
+            href="/finished"
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 7, textDecoration: "none", color: "var(--ink-soft)", fontSize: 13, fontWeight: 500, border: "1px solid var(--line)", marginBottom: 8 }}
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <circle cx="4" cy="4" r="2" />
+              <circle cx="12.5" cy="6" r="1.8" />
+              <circle cx="6.5" cy="12.5" r="1.8" />
+              <path d="M5.6 5.4l5.2 0.9M5.3 5.6l0.9 5.2" />
+            </svg>
+            读完
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, color: "var(--faint)", marginLeft: "auto" }}>Graph</span>
+          </Link>
           <Link
             href="/stats"
             style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 7, textDecoration: "none", color: "var(--ink-soft)", fontSize: 13, fontWeight: 500, border: "1px solid var(--line)", marginBottom: 8 }}
@@ -844,6 +894,18 @@ export default function Triage() {
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <PBBrand size={22} />
                 <span style={{ flex: 1 }} />
+                <Link
+                  href="/finished"
+                  aria-label="读完 · 知识图谱"
+                  style={{ width: 34, height: 34, borderRadius: 999, border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)", textDecoration: "none", flex: "0 0 auto" }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <circle cx="4" cy="4" r="2" />
+                    <circle cx="12.5" cy="6" r="1.8" />
+                    <circle cx="6.5" cy="12.5" r="1.8" />
+                    <path d="M5.6 5.4l5.2 0.9M5.3 5.6l0.9 5.2" />
+                  </svg>
+                </Link>
                 <Link
                   href="/stats"
                   aria-label="阅读统计"
@@ -1010,6 +1072,46 @@ export default function Triage() {
           )
         )}
       </div>
+      {tkModal && (
+        <div
+          onClick={() => closeTakeaway(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 100, background: "color-mix(in oklch, var(--ink) 38%, transparent)", backdropFilter: "blur(3px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: "min(520px, 100%)", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 16, padding: "22px 24px", boxShadow: "0 20px 60px rgba(0,0,0,0.22)" }}
+          >
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--seal)" }}>读完 · 写点收获</div>
+            <div style={{ fontFamily: "var(--font-serif)", fontSize: 18, fontWeight: 600, margin: "8px 0 14px", lineHeight: 1.35 }}>{tkModal.title}</div>
+            <textarea
+              autoFocus
+              value={tkModal.text}
+              onChange={(e) => setTkModal((m) => (m ? { ...m, text: e.target.value } : m))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  closeTakeaway(true);
+                } else if (e.key === "Escape") {
+                  e.preventDefault();
+                  closeTakeaway(false);
+                }
+              }}
+              placeholder="这篇给你的一句收获…（可选）。用 #标签 或 [[标题]] 关联其他文章，会连进读完图谱。"
+              rows={4}
+              style={{ width: "100%", resize: "vertical", boxSizing: "border-box", padding: "12px 14px", borderRadius: 11, border: "1px solid var(--line-strong)", background: "var(--paper)", color: "var(--ink)", fontFamily: "var(--font-sans)", fontSize: 14, lineHeight: 1.6, outline: "none" }}
+            />
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16 }}>
+              <span style={{ flex: 1, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--faint)" }}>#标签 / [[标题]] 关联 · ⌘↵ 保存</span>
+              <button type="button" onClick={() => closeTakeaway(false)} style={{ padding: "9px 16px", borderRadius: 999, border: "1px solid var(--line)", background: "transparent", color: "var(--muted)", fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                跳过
+              </button>
+              <button type="button" onClick={() => closeTakeaway(true)} style={{ padding: "9px 18px", borderRadius: 999, border: "none", background: "var(--seal)", color: "#fff", fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                {tkModal.text.trim() ? "保存并完成 · 撒花" : "完成 · 撒花"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

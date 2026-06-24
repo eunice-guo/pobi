@@ -24,6 +24,7 @@ export interface FeedItem {
   summaryZh: string | null; // null when not yet enriched
   translationZh: string | null;
   tickers: string[];
+  topics?: string[]; // AI-extracted topic tags for the 读完 knowledge graph
   sectors: string[];
   secondHand: true;
   enriched: boolean;

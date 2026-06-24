@@ -9,6 +9,7 @@ import { PBBrand, PBAvatar, PBPlatform, PBDisclaimer } from "@/components/pb";
 import { pobiBurst, pobiCelebrate } from "@/lib/confetti";
 import { CHANNEL_META, CHANNEL_ORDER, DISABLED_SOURCES_KEY, RENAMES_KEY, initialsOf, tintOf } from "@/lib/triage";
 import { computeStats, loadReadStat, loadClickLog } from "@/lib/stats";
+import { loadFinished, takeawayRateBySource } from "@/lib/finished";
 
 const REMOVED_KEY = "pobi.sourceRemovals";
 const ADDS_KEY = "pobi.sourceAdds";
@@ -131,6 +132,11 @@ export default function SourcesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feed, refreshTick]);
 
+  // 读完但从不写收获的来源 → 取消订阅候选。keyed by the source name stored on
+  // each finished note (= the source displayName at read time).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const takeawayBy = useMemo(() => takeawayRateBySource(loadFinished()), [refreshTick]);
+
   const flash = (msg: string) => {
     setToast(msg);
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -228,6 +234,9 @@ export default function SourcesPage() {
     const rate = wk.recv ? Math.round((wk.read / wk.recv) * 100) : 0;
     const low = wk.recv >= 3 && wk.read / wk.recv < 0.34;
     const paused = disabled.has(src.key);
+    // 读完 ≥3 篇却从不写收获 → 低价值，建议取消订阅
+    const tk = takeawayBy[src.name] || { finished: 0, noted: 0 };
+    const suggestDrop = !paused && tk.finished >= 3 && tk.noted === 0;
     return (
       <div style={{ border: "1px solid var(--line)", borderRadius: 14, background: "var(--surface)", padding: 16, display: "flex", flexDirection: "column", gap: 12, opacity: paused ? 0.6 : 1 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}>
@@ -284,6 +293,16 @@ export default function SourcesPage() {
           {paused && <span style={{ letterSpacing: "0.06em", color: "var(--muted)", border: "1px solid var(--line)", borderRadius: 999, padding: "1px 6px" }}>暂停</span>}
         </div>
 
+        {suggestDrop && (
+          <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11.5, color: "var(--down)", background: "color-mix(in oklch, var(--down) 8%, transparent)", border: "1px solid color-mix(in oklch, var(--down) 30%, transparent)", borderRadius: 9, padding: "7px 10px" }}>
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden style={{ flex: "0 0 auto" }}>
+              <path d="M8 1.5l6.5 11.5h-13z" />
+              <path d="M8 6.5v3M8 11.5v.01" />
+            </svg>
+            <span>读完 {tk.finished} 篇但从不记收获 · 建议取消订阅</span>
+          </div>
+        )}
+
         <div style={{ display: "flex", gap: 8, borderTop: "1px solid var(--line)", paddingTop: 12 }}>
           <button onClick={() => togglePause(src.key)} style={{ flex: 1, border: "1px solid var(--line)", background: "var(--surface)", borderRadius: 8, padding: "7px 0", cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 600, color: "var(--ink-soft)" }}>
             {paused ? "恢复" : "暂停"}
@@ -317,6 +336,7 @@ export default function SourcesPage() {
               {copied ? "已复制 ✓" : `复制更改 (${changeCount})`}
             </button>
           )}
+          <Link href="/finished" style={{ textDecoration: "none", color: "var(--ink-soft)", fontSize: 13, fontWeight: 500 }}>读完</Link>
           <Link href="/stats" style={{ textDecoration: "none", color: "var(--ink-soft)", fontSize: 13, fontWeight: 500 }}>阅读统计</Link>
         </div>
       </div>
