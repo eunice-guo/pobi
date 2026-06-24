@@ -186,7 +186,7 @@ export default function FinishedPage() {
       <TopBar />
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "36px 28px 80px" }}>
         <header style={{ marginBottom: 22 }}>
-          <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: 34, margin: 0 }}>读完 · 知识图谱</h1>
+          <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: 34, margin: 0 }}>知识图谱</h1>
           <div style={{ marginTop: 8, fontSize: 13.5, color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
             {nodes.length} 篇读完 · {edges.length} 条连接 · {topicCount} 个主题
           </div>

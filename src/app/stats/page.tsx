@@ -100,7 +100,7 @@ export default function StatsPage() {
         <span style={{ width: 1, height: 18, background: "var(--line)" }} />
         <PBBrand size={24} />
         <span style={{ flex: 1 }} />
-        <Link href="/finished" style={{ textDecoration: "none", color: "var(--ink-soft)", fontSize: 13, fontWeight: 500 }}>读完</Link>
+        <Link href="/finished" style={{ textDecoration: "none", color: "var(--ink-soft)", fontSize: 13, fontWeight: 500 }}>知识图谱</Link>
         <Link href="/sources" style={{ textDecoration: "none", color: "var(--ink-soft)", fontSize: 13, fontWeight: 500 }}>来源管理</Link>
       </div>
     </div>

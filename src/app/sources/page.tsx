@@ -336,7 +336,7 @@ export default function SourcesPage() {
               {copied ? "已复制 ✓" : `复制更改 (${changeCount})`}
             </button>
           )}
-          <Link href="/finished" style={{ textDecoration: "none", color: "var(--ink-soft)", fontSize: 13, fontWeight: 500 }}>读完</Link>
+          <Link href="/finished" style={{ textDecoration: "none", color: "var(--ink-soft)", fontSize: 13, fontWeight: 500 }}>知识图谱</Link>
           <Link href="/stats" style={{ textDecoration: "none", color: "var(--ink-soft)", fontSize: 13, fontWeight: 500 }}>阅读统计</Link>
         </div>
       </div>

@@ -730,7 +730,7 @@ export default function Triage() {
               <circle cx="6.5" cy="12.5" r="1.8" />
               <path d="M5.6 5.4l5.2 0.9M5.3 5.6l0.9 5.2" />
             </svg>
-            读完
+            知识图谱
             <span style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, color: "var(--faint)", marginLeft: "auto" }}>Graph</span>
           </Link>
           <Link
@@ -896,7 +896,7 @@ export default function Triage() {
                 <span style={{ flex: 1 }} />
                 <Link
                   href="/finished"
-                  aria-label="读完 · 知识图谱"
+                  aria-label="知识图谱"
                   style={{ width: 34, height: 34, borderRadius: 999, border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted)", textDecoration: "none", flex: "0 0 auto" }}
                 >
                   <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
