@@ -16,6 +16,7 @@ const SECTOR_LABEL: Record<string, string> = {
   QUALITY: "优质公司",
   "SPECIAL-SITS": "特殊事件",
   "TECH-STRATEGY": "科技战略",
+  VENTURE: "风险投资",
   MACRO: "宏观",
   ENERGY: "能源",
   SHORT: "做空",

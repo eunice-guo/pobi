@@ -17,6 +17,7 @@
     { "handle": "https://www.youtube.com/feeds/videos.xml?channel_id=UCSHZKyawb77ixDdsGog4iWA", "displayName": "Lex Fridman Podcast", "channel": "podcast", "priority": "P1", "sectors": ["AI-RESEARCH", "TECH-STRATEGY", "HUMANITIES"], "enabled": true },
     { "handle": "https://www.youtube.com/feeds/videos.xml?channel_id=UC6t1O76G0jYXOAoYCm153dA", "displayName": "Lenny's Podcast · Lenny Rachitsky（产品 / 增长）", "channel": "podcast", "priority": "P1", "sectors": ["TECH-STRATEGY", "SOFTWARE"], "enabled": true },
     { "handle": "https://feeds.simplecast.com/dOSE_bdP", "displayName": "Unsupervised Learning · Jacob Effron（Redpoint AI 播客）", "channel": "podcast", "priority": "P1", "sectors": ["AI-RESEARCH", "TECH-STRATEGY"], "enabled": true },
+    { "handle": "https://www.youtube.com/feeds/videos.xml?channel_id=UCf0PBRjhf0rF8fWBIxTuoWA", "displayName": "20VC · Harry Stebbings（风险投资 / 创业访谈）", "channel": "podcast", "priority": "P1", "sectors": ["VENTURE", "TECH-STRATEGY"], "enabled": true },
 
     { "handle": "https://www.chinatalk.media/feed", "displayName": "ChinaTalk · Jordan Schneider", "channel": "substack", "priority": "P0", "sectors": ["CHINA-TECH"], "enabled": true },
     { "handle": "https://interconnected.blog/rss/", "displayName": "Interconnected · Kevin Xu", "channel": "substack", "priority": "P0", "sectors": ["CHINA-TECH"], "enabled": true },
