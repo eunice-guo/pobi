@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Newsreader, Instrument_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
+import SyncGate from "@/components/SyncGate";
 
 // Option C design system — editorial serif (Newsreader + Noto Serif SC) for
 // titles & reading body, a humanist sans (Instrument Sans + Noto Sans SC) for
@@ -44,7 +45,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&family=Noto+Serif+SC:wght@500;600&display=swap"
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <SyncGate>{children}</SyncGate>
+      </body>
     </html>
   );
 }
