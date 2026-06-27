@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Channel, Feed } from "@/lib/types";
 import { dayLabel, fullDateLabel } from "@/lib/date";
 import { PBBrand, PBAvatar, PBPlatform, PBDisclaimer } from "./pb";
+import { AccountNavButton } from "./AccountNavButton";
 import { pobiBurst, pobiCelebrate } from "@/lib/confetti";
 import { logRead, logClick, OPENED_KEY } from "@/lib/stats";
 import { snapshotFinished } from "@/lib/finished";
@@ -800,6 +801,7 @@ export default function Triage() {
             来源管理
             <span style={{ fontFamily: "var(--font-mono)", fontSize: 9.5, color: "var(--faint)", marginLeft: "auto" }}>Sources</span>
           </Link>
+          <AccountNavButton variant="rail" />
         </aside>
 
         {/* list */}
@@ -971,6 +973,7 @@ export default function Triage() {
                     <path d="M3 13c0-2.5 2.2-4 5-4s5 1.5 5 4" />
                   </svg>
                 </Link>
+                <AccountNavButton variant="icon" />
               </div>
               <div style={{ marginTop: 18 }}>
                 <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: 30, margin: 0, letterSpacing: "0.01em" }}>{activeFolder.cn}</h1>
