@@ -1,6 +1,7 @@
 "use client";
 // Account / sign-in page. Google sign-in via Supabase; shows signed-in identity.
 // Cross-device sync of reading data layers on top of this in the next step.
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { PBBrand } from "@/components/pb";
 import { useUser, signInWithGoogle, signOut } from "@/lib/auth";
@@ -9,6 +10,27 @@ import { supabaseBrowser } from "@/lib/supabase/client";
 export default function AccountPage() {
   const { user, loading } = useUser();
   const configured = !!supabaseBrowser();
+  const [authError, setAuthError] = useState(false);
+
+  // Surface a failed sign-in passed back as ?auth_error=1.
+  useEffect(() => {
+    setAuthError(new URLSearchParams(window.location.search).has("auth_error"));
+  }, []);
+
+  // After sign-in, return to wherever the user started (saved before redirect).
+  useEffect(() => {
+    if (!user) return;
+    let next: string | null = null;
+    try {
+      next = sessionStorage.getItem("pobi.authNext");
+      sessionStorage.removeItem("pobi.authNext");
+    } catch {
+      /* ignore */
+    }
+    if (next && next !== "/account" && next.startsWith("/")) {
+      window.location.replace(next);
+    }
+  }, [user]);
 
   return (
     <main
@@ -87,6 +109,11 @@ export default function AccountPage() {
                 登录后，你的已读 / 加星 / 待读 / 知识图谱将跨手机与电脑同步，并拥有你自己的订阅。
               </p>
             </div>
+            {authError && (
+              <p style={{ fontFamily: "var(--font-serif)", fontSize: 12, color: "var(--seal)" }}>
+                登录未完成，请重试。
+              </p>
+            )}
             <button onClick={() => signInWithGoogle()} style={btn("primary")}>
               <GoogleMark /> 使用 Google 登录
             </button>

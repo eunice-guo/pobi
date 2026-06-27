@@ -33,12 +33,17 @@ export function useUser() {
 export async function signInWithGoogle() {
   const sb = supabaseBrowser();
   if (!sb) return;
-  const next = window.location.pathname + window.location.search;
+  // Remember where to return to AFTER login. Kept in sessionStorage (not as a
+  // query param) because Supabase's redirect allowlist won't match callback
+  // URLs that carry a query string — it would fall back to the Site URL.
+  try {
+    sessionStorage.setItem("pobi.authNext", window.location.pathname + window.location.search);
+  } catch {
+    /* ignore */
+  }
   await sb.auth.signInWithOAuth({
     provider: "google",
-    options: {
-      redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-    },
+    options: { redirectTo: `${window.location.origin}/auth/callback` },
   });
 }
 

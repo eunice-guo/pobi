@@ -6,14 +6,15 @@ import { supabaseServer } from "@/lib/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
 
   if (code) {
     const supabase = await supabaseServer();
     if (supabase) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
-      if (!error) return NextResponse.redirect(`${origin}${next}`);
+      // Land on /account, which reads sessionStorage("pobi.authNext") and
+      // bounces to wherever the user started (or stays to confirm sign-in).
+      if (!error) return NextResponse.redirect(`${origin}/account`);
     }
   }
-  return NextResponse.redirect(`${origin}/?auth_error=1`);
+  return NextResponse.redirect(`${origin}/account?auth_error=1`);
 }
